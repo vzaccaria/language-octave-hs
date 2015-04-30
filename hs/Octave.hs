@@ -4,22 +4,23 @@ module Main where
 
 import Haste.Foreign
 import Haste.Prim (toJSStr)
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Language
-import Text.Parsec.Prim
 import Text.Parsec.Combinator
-import Text.Parsec.Token
-import qualified Text.ParserCombinators.Parsec.Token as Token
-import Data.Functor.Identity
+import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Error
+import Control.Applicative hiding (many, (<|>))
 import OctaveLexer
 
+_statement_separator :: Parser ()
+_statement_separator = (char ';' <|> char '\n') >> _ws
 
+_statements :: Parser String
+_statements = do
+    statements <- (_id <|> _stringLiteral <|> _int) `sepBy` (_statement_separator)
+    return (foldr (++) "" statements)
 
 -- The whole parser
-theParser :: ParsecT String u Identity String
-theParser = _id <|> _int <|> _stringLiteral
-
+theParser:: Parser String
+theParser = _ws >> _statements <* eof
 
 
 -- Utility function

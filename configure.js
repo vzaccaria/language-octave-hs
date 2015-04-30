@@ -13,7 +13,7 @@ generateProject(_ => {
   }
 
   _.haste = (dir, ...deps) => {
-    var command = (_) => `hastec '--start=hasteMain(); module.exports = Haste' ${_.source} -o ${_.product}`
+    var command = (_) => `hastec '--start=hasteMain(); module.exports = Haste' -ihs ${_.source} -o ${_.product}`
     var product = (_) => `./lib/${path.basename(_.source, '.hs')}.js`
     _.compileFiles(...([command, product, dir].concat(deps)))
   }
@@ -27,7 +27,7 @@ generateProject(_ => {
   _.collectSeq("all", _ => {
     _.collect("build", _ => {
       _.babel("src/*.js")
-      _.haste("hs/octave.hs")
+      _.haste("hs/Octave.hs", "hs/*.hs")
     })
     _.cmd("cp ./lib/index.js ./index.js")
     _.cmd("./node_modules/.bin/markdox ./index.js -o docs/api.md")
