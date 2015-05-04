@@ -5,26 +5,37 @@ var should = chai.should()
 /*global describe, it, before, beforeEach, after, afterEach */
 var mod = require('./octave')
 
+var statementTests = [
+  ["foo;", "It works! just lexed: (foo)"],
+  ["'foo';", "It works! just lexed: (foo)"],
+  ["121;", "It works! just lexed: (121)"],
+  ["121; x;", "It works! just lexed: (121, x)"],
+  ["121; x ;", "It works! just lexed: (121, x)"]
+]
+
+var exprTests = [
+  ["1+1", "ok: BinOp \"+\" (ConstI 1) (ConstI 1)"],
+  ["-1+1", "ok: BinOp \"+\" (Unop \"-\" (ConstI 1)) (ConstI 1)"],
+  ["[1 2 3]", "ok: Matrix [Row [ConstI 1,ConstI 2,ConstI 3]]"],
+  ["[1 2; 3 4]", "ok: Matrix [Row [ConstI 1,ConstI 2],Row [ConstI 3,ConstI 4]]"],
+  ["1+1:2:3", "ok: Cons (Cons (BinOp \"+\" (ConstI 1) (ConstI 1)) (ConstI 2)) (ConstI 3)"],
+  ["[1+2 3]", "ok: Matrix [Row [BinOp \"+\" (ConstI 1) (ConstI 2),ConstI 3]]"]
+]
+
 describe('#module', () => {
   "use strict"
   it('should load the module', () => {
     should.exist(mod.alive)
     mod.alive().should.equal("Hei, I am alive")
   })
-  it('should load the lexer', () => {
-    should.exist(mod.justLex)
-    mod.justLex("foo").should.equal("It works! just lexed: foo")
+  statementTests.map(_ => {
+    it(`Should parse ${_[0]}`, () => {
+      mod.justParseStatements(_[0]).should.equal(_[1])
+    })
   })
-  it('should load the lexer', () => {
-    should.exist(mod.justLex)
-    mod.justLex("'foo'").should.equal("It works! just lexed: foo")
-  })
-  it('should be able parse a number', () => {
-    should.exist(mod.justLex)
-    mod.justLex("121").should.equal("It works! just lexed: 121")
-  })
-  it('should be able parse a complex string', () => {
-    should.exist(mod.justLex)
-    mod.justLex("121, 'x',123").should.equal("It works! just lexed: 121x123")
+  exprTests.map(_ => {
+    it(`Should parse ${_[0]}`, () => {
+      mod.justParseExpression(_[0]).should.equal(_[1])
+    })
   })
 })

@@ -14,13 +14,18 @@ generateProject(_ => {
 
   _.collectSeq("all", _ => {
     _.collect("build", _ => {
-      _.ghc("OctaveGrammar.hs", "*.hs")
+      _.ghc("Octave.hs", "*.hs")
     })
-    _.cmd("./OctaveGrammar.x")
+    _.cmd("./Octave.x")
   })
 
   _.collect("update", _ => {
     _.cmd("make clean && ../node_modules/.bin/babel configure.js | node")
   });
+
+  _.collect("c", _ => {
+    _.cmd("make clean")
+    _.cmd("rm -f *.hi *.o *.x")
+  })
 
 })

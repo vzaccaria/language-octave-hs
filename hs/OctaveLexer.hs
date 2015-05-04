@@ -1,26 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module OctaveLexer (
-  _id,
-  _lexeme,
-  _symbol,
-  _int,
-  _stringLiteral,
-  _ws,
-  _eol,
-  _eos
-) where
+module OctaveLexer  where
 
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Language
-import Text.Parsec.Prim
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Data.Functor.Identity
-import Text.Parsec.Combinator
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
-import Control.Applicative hiding (many, (<|>))
-
 
 -- We start from a classic definition for tokens in our language
 octaveDef :: GenLanguageDef String u Identity
@@ -43,23 +28,22 @@ octaveDef = emptyDef {
 lexer :: Token.GenTokenParser String u Data.Functor.Identity.Identity
 lexer = Token.makeTokenParser octaveDef
 
-
-
 -- Derive your own microParsers to be combined here:
 
-_lexeme :: Parser String -> Parser String
+_lexeme:: Parser a -> Parser a
 _lexeme = Token.lexeme lexer
 
-_id:: Parser String 
-_id = many1 (alphaNum <|> char '_')
+_id:: Parser String
+_id = _lexeme $ many1 (alphaNum <|> char '_')
 
 _symbol :: String -> Parser String
 _symbol = Token.symbol lexer
 
-_int :: Parser String
-_int = do
-        i <- Token.integer lexer
-        return (show i)
+_int :: Parser Integer
+_int = _lexeme (Token.integer lexer)
+
+_double :: Parser Double
+_double = _lexeme (Token.float lexer)
 
 _stringLiteral :: Parser String
 _stringLiteral = _lexeme s
@@ -67,11 +51,20 @@ _stringLiteral = _lexeme s
                    legitChar = noneOf [ '\'', '\n' ]
                    s = between (char '\'') (char '\'') (many legitChar)
 
+_reserved:: String -> Parser ()
+_reserved = Token.reservedOp lexer
+
 _ws :: Parser ()
 _ws = Token.whiteSpace lexer
 
 _eol :: Parser Char
 _eol = newline
+
+_parens:: Parser a -> Parser a
+_parens = Token.parens lexer
+
+_brackets:: Parser a -> Parser a
+_brackets = Token.brackets lexer
 
 _semi :: Parser Char
 _semi = char ';'
