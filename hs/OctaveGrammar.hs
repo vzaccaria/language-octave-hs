@@ -42,21 +42,21 @@ justParse s = return $
               in "Error!! " ++ errorString
           where parsed = parseIt s
 
-ttrace actual expected = trace ("actual: "++(show actual) ++ " expected: "++ (show expected)) expected
-
-testFun :: (String, Either t String) -> Bool
-testFun (toParse, expected) = actual == (ttrace actual expectedString)
-  where
-  (Right actual) = parseIt toParse
-  (Right expectedString) = expected
-
-runTests :: [(String, Either t String)] -> Bool
-runTests tests = and (map testFun tests)
-
-modTests :: [(String, Either a String)]
-modTests = [
-  ("1;2;", (Right "(1, 2)"))
-  ]
-
-testThisModule :: Bool
-testThisModule = runTests modTests
+-- ttrace actual expected = trace ("actual: "++(show actual) ++ " expected: "++ (show expected)) expected
+--
+-- testFun :: (String, Either t String) -> Bool
+-- testFun (toParse, expected) = actual == (ttrace actual expectedString)
+--   where
+--   (Right actual) = parseIt toParse
+--   (Right expectedString) = expected
+--
+-- runTests :: [(String, Either t String)] -> Bool
+-- runTests tests = and (map testFun tests)
+--
+-- modTests :: [(String, Either a String)]
+-- modTests = [
+--   ("1;2;", (Right "(1, 2)"))
+--   ]
+--
+-- testThisModule :: Bool
+-- testThisModule = runTests modTests

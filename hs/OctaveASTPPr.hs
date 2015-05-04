@@ -41,19 +41,19 @@ ps (Function (Just name) inpar outpar slist) =
 ps _ = error "Sorry! the expression is not yet supported"
 
 
-testFun (e,s) = (ps e) == (trace ("actual: "++(ps e) ++ " expected: "++s) s)
-
-test tts = and (map testFun tts)
-
-exampleStatement = (Eval "pluto" [Default, Default])
-exampleFunction = (Function (Just "pippo") ["a1","a2"] ["a3","a4"] [ exampleStatement ])
-
-mytests = [
-  ((Eval "pluto" [Cons (ConstI 1) (ConstI 2)]),                      "meval(\"pluto\", range(1,2))"),
-  ((Assign "pluto" (Just [Cons (ConstI 1) (ConstI 2)]) (ConstI 1)),  "assign(\"pluto\", range(1,2), 1)"),
-  (exampleStatement,                                "meval(\"pluto\", __oct__default__, __oct__default__)"),
-  (exampleFunction, "function pippo(a1, a2){meval(\"pluto\", __oct__default__, __oct__default__)}")
-  ]
-
-testThisModule :: Bool
-testThisModule = test mytests
+-- testFun (e,s) = (ps e) == (trace ("actual: "++(ps e) ++ " expected: "++s) s)
+--
+-- test tts = and (map testFun tts)
+--
+-- exampleStatement = (Eval "pluto" [Default, Default])
+-- exampleFunction = (Function (Just "pippo") ["a1","a2"] ["a3","a4"] [ exampleStatement ])
+--
+-- mytests = [
+--   ((Eval "pluto" [Cons (ConstI 1) (ConstI 2)]),                      "meval(\"pluto\", range(1,2))"),
+--   ((Assign "pluto" (Just [Cons (ConstI 1) (ConstI 2)]) (ConstI 1)),  "assign(\"pluto\", range(1,2), 1)"),
+--   (exampleStatement,                                "meval(\"pluto\", __oct__default__, __oct__default__)"),
+--   (exampleFunction, "function pippo(a1, a2){meval(\"pluto\", __oct__default__, __oct__default__)}")
+--   ]
+--
+-- testThisModule :: Bool
+-- testThisModule = test mytests
