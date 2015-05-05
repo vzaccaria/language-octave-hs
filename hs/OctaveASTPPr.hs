@@ -2,58 +2,43 @@
 
 module OctaveASTPPr where
 
-import PrettyPrint
-import Debug.Trace
-import Text.Printf
 import OctaveAST
+import PrettyPrint
 
 
-pe::Expr -> String
+prExpr ::Expr -> String
+prExpr  (Cons (Cons a b) c) =
+  "range(" ++ prExpr  a ++ ", " ++ prExpr  b ++ ", "++ prExpr  c ++ ")"
 
-pe (Cons (Cons a b) c) =
-  "range(" ++ pe a ++ "," ++ pe b ++ ", "++ pe c ++ ")"
+prExpr  (Cons a b) =
+  "range(" ++ prExpr  a ++ ", " ++ prExpr  b ++ ")"
 
-pe (Cons a b) =
-  "range(" ++ pe a ++ "," ++ pe b ++ ")"
+prExpr  (Default)         = "__oct__default__"
+prExpr  (ConstI i)        = show i
+prExpr  (ConstD f)        = show f
+prExpr  (Str s)           = show s
+prExpr  (Unop   s e)      = "uop"   ++ parens (vectorAsArgs [show s, (prExpr e)])
+prExpr  (BinOp  s e1 e2)  = "bop"   ++ parens (vectorAsArgs [show s, (prExpr e1), (prExpr e2)])
+prExpr  (Eval x e)        = "meval" ++ parens (vectorAsArgs ("ce":show x:map prExpr e))
 
-pe (Default) = "__oct__default__"
-pe (ConstI i) = show i
+prExpr _ = error "Sorry, need some more pattern matching here"
 
 ps:: Statement -> String
-
-ps (Eval x e) =
-  "meval" ++ parens (vectorAsArgs (show x:map pe e))
-
-ps (Assign lval Nothing rval) =
-    "assign" ++ parens (vectorAsArgs args) where
-      args = [ show lval, pe rval]
-
-ps (Assign lval (Just l) rval) =
-    "assign" ++ parens (vectorAsArgs args) where
-            args = (show lval):(map pe l) ++ [pe rval]
-
-ps (Function (Just name) inpar outpar slist) =
-  printf "function " ++ name ++ pars ++ (braces body)
-  where
-    pars = asSet inpar
-    body = (joinVec (fmap ps slist) ";\n")
+-- ps (Eval x e) =
+--
+--
+-- ps (Assign lval Nothing rval) =
+--     "assign" ++ parens (vectorAsArgs args) where
+--       args = [ show lval, pe val]
+--
+-- ps (Assign lval (Just l) rval) =
+--     "assign" ++ parens (vectorAsArgs args) where
+--             args = (show lval):(map pe l) ++ [pe rval]
+--
+-- ps (Function (Just name) inpar outpar slist) =
+--   printf "function " ++ name ++ pars ++ (braces body)
+--   where
+--     pars = asSet inpar
+--     body = (joinVec (fmap ps slist) ";\n")
 
 ps _ = error "Sorry! the expression is not yet supported"
-
-
--- testFun (e,s) = (ps e) == (trace ("actual: "++(ps e) ++ " expected: "++s) s)
---
--- test tts = and (map testFun tts)
---
--- exampleStatement = (Eval "pluto" [Default, Default])
--- exampleFunction = (Function (Just "pippo") ["a1","a2"] ["a3","a4"] [ exampleStatement ])
---
--- mytests = [
---   ((Eval "pluto" [Cons (ConstI 1) (ConstI 2)]),                      "meval(\"pluto\", range(1,2))"),
---   ((Assign "pluto" (Just [Cons (ConstI 1) (ConstI 2)]) (ConstI 1)),  "assign(\"pluto\", range(1,2), 1)"),
---   (exampleStatement,                                "meval(\"pluto\", __oct__default__, __oct__default__)"),
---   (exampleFunction, "function pippo(a1, a2){meval(\"pluto\", __oct__default__, __oct__default__)}")
---   ]
---
--- testThisModule :: Bool
--- testThisModule = test mytests

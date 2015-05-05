@@ -4,24 +4,40 @@ module OctaveGrammarExpr where
 
 import Text.Parsec.Expr
 import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
 import Control.Applicative hiding (many, (<|>))
 import Debug.Trace
 import OctaveLexer
-import PrettyPrint
 import OctaveAST
+import OctaveASTPPr
 
 _expr :: Parser Expr
 _expr = buildExpressionParser table _term
       <|> _matrix
+      <|> _default
       <?> "expression error"
 
-_term :: Parser Expr
-_term = (_parens _expr)
-  <|> _number_const_e
+_eval_sym :: Parser Expr
+_eval_sym = do { v <- _id; return (Eval v []) }
 
-_number_const_e :: Parser Expr
-_number_const_e = (try _float_const_e) <|> _int_const_e
+_eval_indexed_sym :: Parser Expr
+_eval_indexed_sym = do { v <- _id;
+                 elist <-  _parens( sepBy _expr (_reserved ","));
+                 return (Eval v elist) }
+
+_string:: Parser Expr
+_string = (Str <$> _stringLiteral)
+
+_term :: Parser Expr
+_term =
+            (_parens _expr)
+        <|> _number
+        <|> try (_eval_indexed_sym)
+        <|> _eval_sym
+        <|> _string
+
+
+_number :: Parser Expr
+_number = (try _float_const_e) <|> _int_const_e
 
 _int_const_e :: Parser Expr
 _int_const_e = ConstI <$> _int
@@ -29,6 +45,8 @@ _int_const_e = ConstI <$> _int
 _float_const_e :: Parser Expr
 _float_const_e = ConstD <$> _double
 
+_default:: Parser Expr
+_default = do { _reserved ":"; return Default }
 
 _vector :: Parser Expr
 _vector = Row <$> (many _expr)
@@ -69,3 +87,11 @@ justParseExpression s = return $
             Right value -> "ok: " ++ (show value)
             Left _ -> "error"
           where parsed = parseExpression s
+
+
+justTranslateExpression :: String -> IO String
+justTranslateExpression s = return $
+              case parsed of
+                Right value -> "ok: " ++ (prExpr value)
+                Left _ -> "error"
+              where parsed = parseExpression s

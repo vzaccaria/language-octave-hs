@@ -6,17 +6,16 @@ data Expr =
     ConstI Integer
   | ConstD Double
   | Cons Expr Expr
+  | Str String
   | Matrix [ Expr ]
   | Row [ Expr ]
-  | VectorValues Integer Integer [ Expr ]
   | BinOp String Expr Expr
   | Unop String Expr
+  | Eval String [Expr]
   | Default
   deriving Show
 
 data Statement =
-    Eval String [Expr]
-  | Assign String (Maybe [Expr]) Expr
-  | Return
+    Assign String (Maybe [Expr]) Expr
   | Function (Maybe String) [String] [String] [Statement]
   deriving Show
