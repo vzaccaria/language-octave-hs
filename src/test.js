@@ -6,11 +6,11 @@ var should = chai.should()
 var mod = require('./octave')
 
 var statementTests = [
-  ["foo;", "It works! just lexed: (foo)"],
-  ["'foo';", "It works! just lexed: (foo)"],
-  ["121;", "It works! just lexed: (121)"],
-  ["121; x;", "It works! just lexed: (121, x)"],
-  ["121; x ;", "It works! just lexed: (121, x)"]
+  // ["foo;", "It works! just lexed: (foo)"],
+  // ["'foo';", "It works! just lexed: (foo)"],
+  // ["121;", "It works! just lexed: (121)"],
+  // ["121; x;", "It works! just lexed: (121, x)"],
+  // ["121; x ;", "It works! just lexed: (121, x)"]
 ]
 
 var exprTests = [
@@ -20,10 +20,13 @@ var exprTests = [
   ["[1 2; 3 4]", "ok: Matrix [Row [ConstI 1,ConstI 2],Row [ConstI 3,ConstI 4]]"],
   ["1+1:2:3", "ok: Range (Range (BinOp \"+\" (ConstI 1) (ConstI 1)) (ConstI 2)) (ConstI 3)"],
   [":", "ok: Default"],
+  ["'a'", "ok: Str \"a\""],
   ["a:b", "ok: Range (Eval \"a\" []) (Eval \"b\" [])"],
+  ["(1+1*(3-2))", "ok: BinOp \"+\" (ConstI 1) (BinOp \"*\" (ConstI 1) (BinOp \"-\" (ConstI 3) (ConstI 2)))"],
   ["a(1,1)", "ok: Eval \"a\" [ConstI 1,ConstI 1]"],
   ["a(:)", "ok: Eval \"a\" [Default]"],
   ["['a' 'b']", "ok: Matrix [Row [Str \"a\",Str \"b\"]]"],
+  ["[a'  'b']", "ok: Matrix [Row [Tran (Eval \"a\" []),Str \"b\"]]"],
   ["[1+2 3]", "ok: Matrix [Row [BinOp \"+\" (ConstI 1) (ConstI 2),ConstI 3]]"]
 ]
 

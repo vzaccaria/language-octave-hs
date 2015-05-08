@@ -9,9 +9,26 @@ import Debug.Trace
 import OctaveLexer
 import OctaveAST
 
+t x = trace ("value: " ++ (show x)) x
+
+opTable = buildExpressionParser table
+
 _expr :: Parser Expr
-_expr = buildExpressionParser table _term
+_expr =   opTable _primary_expression
+      <|>  _string
       <?> "expression error"
+
+_primary_expression:: Parser Expr
+_primary_expression =
+                  try (_eval_indexed_sym)
+                  <|> try (_eval_sym)
+                  <|> _number
+                  <|> (_parens _expr)
+                  <|> _matrix
+                  <|> _default
+
+_transpose:: Parser Expr -> Parser Expr
+_transpose x = Tran <$> (x <* (char '\''))
 
 _eval_sym :: Parser Expr
 _eval_sym = do { v <- _id; return (Eval v []) }
@@ -23,17 +40,6 @@ _eval_indexed_sym = do { v <- _id;
 
 _string:: Parser Expr
 _string = (Str <$> _stringLiteral)
-
-_term :: Parser Expr
-_term =
-            (_parens _expr)
-        <|> _number
-        <|> try (_eval_indexed_sym)
-        <|> _eval_sym
-        <|> _string
-        <|> _matrix
-        <|> _default
-
 
 _number :: Parser Expr
 _number = (try _float_const_e) <|> _int_const_e
@@ -55,7 +61,11 @@ _matrix = Matrix <$> _brackets (sepBy _vector (_reserved ";"))
 
 -- From: https://hackage.haskell.org/package/parsec-3.0.0/docs/Text-Parsec-Expr.html
 
-table   = [   [
+table   = [
+              [
+                postfix "'" (Tran) ],
+
+              [
                 prefix "+" (Unop "+"),
                 prefix "-" (Unop "-") ],
 
@@ -75,7 +85,6 @@ binary  name fun assoc = Infix    (do{ _reserved name; return fun }) assoc
 prefix  name fun       = Prefix   (do{ _reserved name; return fun })
 postfix name fun       = Postfix  (do{ _reserved name; return fun })
 
-t x = trace ("value: " ++ (show x)) x
 
 parseExpression :: String -> Either ParseError Expr
 parseExpression = parse (_ws >> _expr <* eof) "(source)"

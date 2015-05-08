@@ -7,6 +7,7 @@ data Expr =
   | ConstD Double
   | Range Expr Expr
   | Str String
+  | Tran Expr
   | Matrix [ Expr ]
   | Row [ Expr ]
   | BinOp String Expr Expr

@@ -21,7 +21,7 @@ octaveDef = emptyDef {
 
   Token.reservedOpNames = [   "+", "-", "*", "/", "=",
                               "~=", "==", "^", "./", ".*",
-                              "<", ">", "<=", ">=", ":",
+                              "<", ">", "<=", ">=", ":", "'",
                               "&", "&&", "|", "||" ]
 }
 
@@ -33,8 +33,13 @@ lexer = Token.makeTokenParser octaveDef
 _lexeme:: Parser a -> Parser a
 _lexeme = Token.lexeme lexer
 
+
 _id:: Parser String
-_id = _lexeme $ many1 (alphaNum <|> char '_')
+_id = _lexeme $ do {
+        c <- letter <|> char '_';
+        cs <- many (alphaNum <|> char '_');
+        return (c:cs)
+        }
 
 _symbol :: String -> Parser String
 _symbol = Token.symbol lexer
