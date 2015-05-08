@@ -4,7 +4,7 @@ module OctaveGrammarExpr where
 
 import Text.Parsec.Expr
 import Text.ParserCombinators.Parsec
-import Control.Applicative hiding (many, (<|>))
+import Control.Applicative hiding (many, (<|>), optional)
 import Debug.Trace
 import OctaveLexer
 import OctaveAST
@@ -26,9 +26,6 @@ _primary_expression =
                   <|> (_parens _expr)
                   <|> _matrix
                   <|> _default
-
-_transpose:: Parser Expr -> Parser Expr
-_transpose x = Tran <$> (x <* (char '\''))
 
 _eval_sym :: Parser Expr
 _eval_sym = do { v <- _id; return (Eval v []) }
@@ -54,7 +51,7 @@ _default:: Parser Expr
 _default = do { _reserved ":"; return Default }
 
 _vector :: Parser Expr
-_vector = Row <$> (many _expr)
+_vector = Row <$> (sepBy1 _expr (optional (char ',')))
 
 _matrix :: Parser Expr
 _matrix = Matrix <$> _brackets (sepBy _vector (_reserved ";"))
@@ -63,7 +60,13 @@ _matrix = Matrix <$> _brackets (sepBy _vector (_reserved ";"))
 
 table   = [
               [
-                postfix "'" (Tran) ],
+                postfix "'" (Tran),
+                postfix ".'" (NTran),
+                binary "**" (BinOp "**") AssocLeft ,
+                binary ".**" (BinOp ".**") AssocLeft,
+                binary "^" (BinOp "^") AssocLeft ,
+                binary ".^" (BinOp ".^") AssocLeft
+                  ],
 
               [
                 prefix "+" (Unop "+"),
@@ -71,11 +74,17 @@ table   = [
 
               [
                 binary "*" (BinOp "*") AssocLeft,
-                binary "/" (BinOp "/") AssocLeft ],
-
+                binary ".*" (BinOp ".*") AssocLeft,
+                binary "/" (BinOp "/") AssocLeft ,
+                binary "./" (BinOp "./") AssocLeft,
+                binary "\\" (BinOp "\\") AssocLeft ,
+                binary ".\\" (BinOp ".\\") AssocLeft
+                 ],
               [
                 binary "+" (BinOp "+") AssocLeft,
-                binary "-" (BinOp "-") AssocLeft ],
+                binary "-" (BinOp "-") AssocLeft,
+                binary ".+" (BinOp ".+") AssocLeft,
+                binary ".-" (BinOp ".-") AssocLeft ],
 
               [
                 binary ":" (Range) AssocLeft ]

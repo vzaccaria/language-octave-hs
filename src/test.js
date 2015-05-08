@@ -26,6 +26,7 @@ var exprTests = [
   ["a(1,1)", "ok: Eval \"a\" [ConstI 1,ConstI 1]"],
   ["a(:)", "ok: Eval \"a\" [Default]"],
   ["['a' 'b']", "ok: Matrix [Row [Str \"a\",Str \"b\"]]"],
+  ["['a','b']", "ok: Matrix [Row [Str \"a\",Str \"b\"]]"],
   ["[a'  'b']", "ok: Matrix [Row [Tran (Eval \"a\" []),Str \"b\"]]"],
   ["[1+2 3]", "ok: Matrix [Row [BinOp \"+\" (ConstI 1) (ConstI 2),ConstI 3]]"]
 ]

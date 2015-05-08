@@ -8,6 +8,7 @@ data Expr =
   | Range Expr Expr
   | Str String
   | Tran Expr
+  | NTran Expr
   | Matrix [ Expr ]
   | Row [ Expr ]
   | BinOp String Expr Expr
