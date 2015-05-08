@@ -2,10 +2,10 @@
 
 module OctaveLexer  where
 
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Language
-import qualified Text.ParserCombinators.Parsec.Token as Token
-import Data.Functor.Identity
+import           Data.Functor.Identity
+import           Text.ParserCombinators.Parsec
+import           Text.ParserCombinators.Parsec.Language
+import qualified Text.ParserCombinators.Parsec.Token    as Token
 
 -- We start from a classic definition for tokens in our language
 octaveDef :: GenLanguageDef String u Identity

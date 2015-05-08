@@ -2,10 +2,10 @@
 
 module OctaveGrammarExprEval where
 
-import Data.Matrix
-import Data.List
-import OctaveAST
-import OctaveGrammarExpr
+import           Data.List
+import           Data.Matrix
+import           OctaveAST
+import           OctaveGrammarExpr
 
 data OD = I Integer | D Double | C Char deriving Show
 type MOD = Matrix OD

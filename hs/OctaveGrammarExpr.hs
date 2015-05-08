@@ -2,12 +2,12 @@
 
 module OctaveGrammarExpr where
 
-import Text.Parsec.Expr
-import Text.ParserCombinators.Parsec
-import Control.Applicative hiding (many, (<|>), optional)
-import Debug.Trace
-import OctaveLexer
-import OctaveAST
+import           Control.Applicative           hiding (many, optional, (<|>))
+import           Debug.Trace
+import           OctaveAST
+import           OctaveLexer
+import           Text.Parsec.Expr
+import           Text.ParserCombinators.Parsec
 
 t x = trace ("value: " ++ (show x)) x
 

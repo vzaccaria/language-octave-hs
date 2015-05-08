@@ -2,15 +2,15 @@
 
 module OctaveGrammar where
 
-import Text.Parsec.Expr
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
-import Control.Applicative hiding (many, (<|>))
-import Debug.Trace
-import PrettyPrint
+import           Control.Applicative                 hiding (many, (<|>))
+import           Debug.Trace
+import           PrettyPrint
+import           Text.Parsec.Expr
+import           Text.ParserCombinators.Parsec
+import           Text.ParserCombinators.Parsec.Error
 
-import OctaveAST
-import OctaveLexer
+import           OctaveAST
+import           OctaveLexer
 
 
 
