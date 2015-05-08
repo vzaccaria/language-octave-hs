@@ -5,7 +5,7 @@ module OctaveAST where
 data Expr =
     ConstI Integer
   | ConstD Double
-  | Cons Expr Expr
+  | Range Expr Expr
   | Str String
   | Matrix [ Expr ]
   | Row [ Expr ]
@@ -14,6 +14,7 @@ data Expr =
   | Eval String [Expr]
   | Default
   deriving Show
+
 
 data Statement =
     Assign String (Maybe [Expr]) Expr

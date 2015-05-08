@@ -15,4 +15,3 @@ main = do
   export (toJSStr "alive") alive
   export (toJSStr "justParseStatements") justParse
   export (toJSStr "justParseExpression") justParseExpression
-  export (toJSStr "justTranslateExpression") justTranslateExpression

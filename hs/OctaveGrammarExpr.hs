@@ -8,12 +8,9 @@ import Control.Applicative hiding (many, (<|>))
 import Debug.Trace
 import OctaveLexer
 import OctaveAST
-import OctaveASTPPr
 
 _expr :: Parser Expr
 _expr = buildExpressionParser table _term
-      <|> _matrix
-      <|> _default
       <?> "expression error"
 
 _eval_sym :: Parser Expr
@@ -34,6 +31,8 @@ _term =
         <|> try (_eval_indexed_sym)
         <|> _eval_sym
         <|> _string
+        <|> _matrix
+        <|> _default
 
 
 _number :: Parser Expr
@@ -69,7 +68,7 @@ table   = [   [
                 binary "-" (BinOp "-") AssocLeft ],
 
               [
-                binary ":" (Cons) AssocLeft ]
+                binary ":" (Range) AssocLeft ]
             ]
 
 binary  name fun assoc = Infix    (do{ _reserved name; return fun }) assoc
@@ -81,17 +80,10 @@ t x = trace ("value: " ++ (show x)) x
 parseExpression :: String -> Either ParseError Expr
 parseExpression = parse (_ws >> _expr <* eof) "(source)"
 
+
 justParseExpression :: String -> IO String
 justParseExpression s = return $
           case parsed of
             Right value -> "ok: " ++ (show value)
-            Left _ -> "error"
+            Left e -> show e
           where parsed = parseExpression s
-
-
-justTranslateExpression :: String -> IO String
-justTranslateExpression s = return $
-              case parsed of
-                Right value -> "ok: " ++ (prExpr value)
-                Left _ -> "error"
-              where parsed = parseExpression s

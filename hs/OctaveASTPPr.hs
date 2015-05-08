@@ -7,10 +7,10 @@ import PrettyPrint
 
 
 prExpr ::Expr -> String
-prExpr  (Cons (Cons a b) c) =
+prExpr  (Range (Range a b) c) =
   "range(" ++ prExpr  a ++ ", " ++ prExpr  b ++ ", "++ prExpr  c ++ ")"
 
-prExpr  (Cons a b) =
+prExpr  (Range a b) =
   "range(" ++ prExpr  a ++ ", " ++ prExpr  b ++ ")"
 
 prExpr  (Default)         = "__oct__default__"
