@@ -60,8 +60,6 @@ _matrix = Matrix <$> _brackets (sepBy _vector (_reserved ";"))
 
 table   = [
               [
-                postfix "'" (Tran),
-                postfix ".'" (NTran),
                 binary "**" (BinOp "**") AssocLeft ,
                 binary ".**" (BinOp ".**") AssocLeft,
                 binary "^" (BinOp "^") AssocLeft ,
@@ -70,7 +68,10 @@ table   = [
 
               [
                 prefix "+" (Unop "+"),
-                prefix "-" (Unop "-") ],
+                prefix "-" (Unop "-")],
+
+              [  postfix "'" (Tran),
+                postfix ".'" (NTran) ],
 
               [
                 binary "*" (BinOp "*") AssocLeft,
@@ -88,6 +89,9 @@ table   = [
 
               [
                 binary ":" (Range) AssocLeft ]
+
+              -- Relational operators here..
+              -- See http://www.chemie.fu-berlin.de/chemnet/use/info/octave/octave_4.html#SEC41
             ]
 
 binary  name fun assoc = Infix    (do{ _reserved name; return fun }) assoc
