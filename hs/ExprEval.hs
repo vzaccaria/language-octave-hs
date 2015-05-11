@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module OctaveGrammarExprEval where
+module ExprEval where
 
+import           AST
 import           Data.List
-import           Data.Map.Strict   (empty, lookup)
+import           Data.Map.Strict (empty, lookup)
 import           Data.Matrix
-import           OctaveAST
-import           OctaveGrammarExpr
-import           OctaveSymtable
+import           Expr
+import           Symtable
 
 eeval :: Symtable -> Expr -> MOD
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module OctaveLexer  where
+module Lexer  where
 
 import           Data.Functor.Identity
 import           Text.ParserCombinators.Parsec

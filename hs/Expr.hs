@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module OctaveGrammarExpr where
+module Expr where
 
+import           AST
 import           Control.Applicative           hiding (many, optional, (<|>))
 import           Debug.Trace
-import           OctaveAST
-import           OctaveLexer
+import           Lexer
 import           Text.Parsec.Expr
 import           Text.ParserCombinators.Parsec
 

@@ -2,10 +2,10 @@
 
 module Main where
 
+import           Expr
+import           Grammar
 import           Haste.Foreign
-import           Haste.Prim        (toJSStr)
-import           OctaveGrammar
-import           OctaveGrammarExpr
+import           Haste.Prim    (toJSStr)
 
 alive :: String -> IO String
 alive _ = return "Hei, I am alive"

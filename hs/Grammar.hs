@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module OctaveGrammar where
+module Grammar where
 
 import           Control.Applicative                 hiding (many, (<|>))
-import           OctaveLexer
+import           Lexer
 import           PrettyPrint
 import           Text.ParserCombinators.Parsec
 import           Text.ParserCombinators.Parsec.Error

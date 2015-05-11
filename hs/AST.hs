@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module OctaveAST where
+module AST where
 
 data Expr =
     ConstI Integer
