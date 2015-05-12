@@ -3,48 +3,51 @@
 module ExprEval where
 
 import           AST
+import           Control.Applicative
+import           Control.Applicative.Lift
 import           Data.List
-import           Data.Map.Strict (empty, lookup)
+import           Data.Map.Strict          (empty, lookup)
 import           Data.Matrix
 import           Expr
 import           Symtable
 
-eeval :: Symtable -> Expr -> MOD
+eeval:: Symtable -> Expr -> Either String MOD
 
-eeval _ (ConstI i)          = fromList 1 1 [ I i ]
+eeval _ (ConstI i)        = return $ fromList 1 1 [ I i ]
+eeval _ (ConstD f)        = return $ fromList 1 1 [ D f ]
+eeval _ (Str st)          = return $ matrix 1 (length st) $ \(_,j) -> (C (st !! (j - 1)))
 
-eeval _ (ConstD f)          = fromList 1 1 [ D f ]
+eeval s (BinOp "+" e1 e2) = (liftA2 (+)) (eeval s e1) (eeval s e2)
+eeval s (BinOp "-" e1 e2) = (liftA2 (-)) (eeval s e1) (eeval s e2)
+eeval s (BinOp "*" e1 e2) = (liftA2 (*)) (eeval s e1) (eeval s e2)
 
--- Convert the string to a characters' array
-eeval _ (Str st) = matrix 1 (length st) $ \(_,j) -> (C (st !! (j - 1)))
-
-eeval s (BinOp "+" e1 e2) = (eeval s e1) + (eeval s e2)
-
-eeval s (BinOp "-" e1 e2) = (eeval s e1) - (eeval s e2)
-
-eeval s (BinOp "*" e1 e2) = (eeval s e1) * (eeval s e2)
-
-eeval s (Row es) = Data.List.foldl1 (<|>) dt
+eeval s (Row es) = Data.List.foldl1 (liftA2 (Data.Matrix.<|>)) dt
        where dt = (fmap (eeval s) es)
 
-eeval s (Matrix es) = Data.List.foldl1 (<->) dt
+eeval s (Matrix es) = Data.List.foldl1 (liftA2 (Data.Matrix.<->)) dt
               where dt = (fmap (eeval s) es)
 
 eeval s (Range a b) =
-  let (I i1) = (eeval s a) ! (1,1)
-      (I i2) = (eeval s b ) ! (1,1)
-      s1 = fromInteger (i2 - i1) in
-      matrix 1 (s1+1) $ \(_,j) -> (I ((toInteger j) + i1 - 1))
+  case (f1, f2) of
+    (Right (I i1), Right (I i2)) ->
+      let s1 = fromInteger (i2 - i1) in
+        return $ matrix 1 (s1+1) $ \(_,j) -> (I ((toInteger j) + i1 - 1))
+    _ -> Left "range specification should be specified with integers"
+  where
+        f1 = (liftA2 (Data.Matrix.!)) (eeval s a) (Right (1,1))
+        f2 = (liftA2 (Data.Matrix.!)) (eeval s b) (Right (1,1))
 
 
 -- Ok, lets start with the boogie here..
-eeval s (Eval sym []) =
-  case (Data.Map.Strict.lookup sym s) of
-      Nothing -> error ("Sorry, symbol `"++ sym ++ "` not found")
-      Just v -> v
+eeval s (Eval var []) =
+  case (Data.Map.Strict.lookup var s) of
+    (Just x) -> return x
+    (Nothing) -> Left ("symbol `" ++ var ++ "` not found")
 
-justEvalExpression:: String -> IO String
-justEvalExpression s = return $
-  case parseExpression s of
-    Right value -> (show (eeval empty value))
-    Left err -> show err
+
+
+-- justEvalExpression:: String -> IO String
+-- justEvalExpression s = return $
+--   case parseExpression s of
+--     Right value -> (show (eeval empty value))
+--     Left err -> show err

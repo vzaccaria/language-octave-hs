@@ -3,7 +3,6 @@
 module Main where
 
 import           Expr
-import           Grammar
 import           Haste.Foreign
 import           Haste.Prim    (toJSStr)
 
@@ -13,5 +12,5 @@ alive _ = return "Hei, I am alive"
 main :: IO ()
 main = do
   export (toJSStr "alive") alive
-  export (toJSStr "justParseStatements") justParse
   export (toJSStr "justParseExpression") justParseExpression
+  -- export (toJSStr "justParseStatements") justParse

@@ -1,5 +1,5 @@
 
-module OctaveSymtable where
+module Symtable where
 
 import           Data.Map.Strict
 import           Data.Matrix
