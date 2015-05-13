@@ -19,6 +19,7 @@ data Expr =
 
 
 data Statement =
-    Assign String (Maybe [Expr]) Expr
+    JustExp Expr
+  | Assign String (Maybe [Expr]) Expr
   | Function (Maybe String) [String] [String] [Statement]
   deriving Show

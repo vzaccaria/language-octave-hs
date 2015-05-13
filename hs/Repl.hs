@@ -7,9 +7,13 @@ import qualified Control.Exception        as E
 import           Data.Map.Strict
 import           Expr
 import           ExprEval
+import           GrammarEval
 import           Symtable
 import           System.Console.Haskeline
 import           Text.Printf
+
+
+
 
 data ReplState = R {
   _step     :: Int,
@@ -22,32 +26,20 @@ prompt i = do {
     getLine
   }
 
-printResult :: Symtable -> Expr -> String
-printResult symtable expr =
-    case (eeval symtable expr) of
-    (Left err) -> "error: " ++ err
-    (Right v) -> (show v)
-
-evalString :: String -> Symtable -> InputT IO ()
-evalString ss symtable = do {
-  case (parseExpression ss) of
-    Left err ->
-      outputStrLn ("syntax error, " ++ (show err));
-    Right expr ->
-      outputStrLn ("\nans = \n" ++ (printResult symtable expr))
-}
-
-loop :: ReplState -> InputT IO ()
-loop (R step symtable) = do
+loop:: (String -> Symtable -> InputT IO Symtable) -> ReplState -> InputT IO ()
+loop eio (R step symtable) = do
   s <- getInputLine ("minioctave:" ++ (show step) ++ "> ")
   case s of
-    Nothing -> loop (R (step + 1) symtable)
+    Nothing -> loop eio (R (step + 1) symtable)
     Just "exit" -> return ()
     Just "quit" -> return ()
     Just ss -> do {
-      evalString ss symtable;
-      loop (R (step + 1) symtable);
+      newSymTableV <- eio ss symtable;
+      loop eio (R (step + 1) newSymTableV);
     }
 
-repl :: IO ()
-repl = runInputT defaultSettings (loop (R 0 empty))
+replExp :: IO ()
+replExp = runInputT defaultSettings (loop evalExprIO (R 0 empty))
+
+replSList :: IO ()
+replSList = runInputT defaultSettings (loop evalSListIO (R 0 empty))

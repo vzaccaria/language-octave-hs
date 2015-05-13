@@ -13,4 +13,3 @@ main :: IO ()
 main = do
   export (toJSStr "alive") alive
   export (toJSStr "justParseExpression") justParseExpression
-  -- export (toJSStr "justParseStatements") justParse
