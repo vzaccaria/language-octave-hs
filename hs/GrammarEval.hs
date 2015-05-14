@@ -16,18 +16,18 @@ type ProgramState = Either String Symtable
 type ProgramStateProcessor = State ProgramState ()
 type PureStateTransition = (ProgramState -> ProgramState)
 
-addAns :: MOD -> Symtable -> Symtable
-addAns valueV symTableV = insert "ans" valueV symTableV
+addAnswer :: MOD -> Symtable -> Symtable
+addAnswer valueV symTableV = insert "ans" valueV symTableV
 
 statementEval :: Statement -> Symtable -> Either String Symtable
 statementEval (Assign varNameV Nothing expressionV) symTableV =
     case (eeval symTableV expressionV) of
       Left errorV -> (Left errorV)
-      Right valueV -> (Right (insert varNameV valueV (addAns valueV symTableV)))
+      Right valueV -> (Right (insert varNameV valueV (addAnswer valueV symTableV)))
 
 statementEval (JustExp expressionV) symTableV = do {
     ans <- eeval symTableV expressionV;
-    Right (addAns ans symTableV)
+    Right (addAnswer ans symTableV)
   }
 
 statementEvalTrampoline :: Statement -> ProgramStateProcessor
