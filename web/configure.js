@@ -24,10 +24,12 @@ generateProject(_ => {
     })
 
     _.toFile("_site/client.js", _ => {
-      _.browserify("src/index.js", "src/*.less")
+      _.minify(_ => {
+        _.browserify("src/index.js", "src/*.less")
+      })
     })
-  })
 
+  })
 
   _.collectSeq("update", _ => {
     _.cmd("../node_modules/.bin/babel ./configure.js | node")
@@ -37,6 +39,7 @@ generateProject(_ => {
     _.startWatch("_site/**/*")
     _.startServe("_site")
   })
+
   _.collect("stop", _ => {
     _.stopWatch()
     _.stopServe()

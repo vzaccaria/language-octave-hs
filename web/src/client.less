@@ -1,5 +1,4 @@
 @import url(http://fonts.googleapis.com/css?family=Inconsolata:400,700);
-@import (css, reference)'../materialize/css/materialize.css';
 .jqconsole-ansi-bold {
   font-weight: bold!important;
 }
@@ -140,6 +139,9 @@
 .jqconsole-ansi-overline {
   text-decoration: overline!important;
 }
+body {
+  background-color: darken(white, 5%);
+}
 #console {
   position: relative;
   width: 600px;
@@ -148,7 +150,7 @@
   margin-left: auto;
   margin-right: auto;
   display: block;
-  &:extend(.z-depth-4);
+  margin-top: 5%;
 }
 /* The inner console element. */
 .jqconsole {
@@ -171,23 +173,23 @@
 }
 /* The current prompt text color */
 .jqconsole-prompt {
-  color: #0d0;
+  color: white;
   .jqconsole-ansi-bold;
   .jqconsole-ansi-color-white;
 }
 /* The command history */
 .jqconsole-old-prompt {
   font-weight: normal;
-  color: #0b0;
+  color: white;
 }
 /* The text color when in input mode. */
 .jqconsole-input {
-  color: #dd0;
+  color: white;
 }
 /* Previously entered input. */
 .jqconsole-old-input {
   font-weight: normal;
-  color: #bb0;
+  color: white;
 }
 /* The text color of the output. */
 .jqconsole-output {
