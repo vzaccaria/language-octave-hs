@@ -1,7 +1,7 @@
 {
   "cmd": "make",
   "args": [
-    "test"
+    ""
   ],
   "env": {}
 }
