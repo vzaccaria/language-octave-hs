@@ -38,6 +38,30 @@ loop eio (R step symtable) = do
       loop eio (R (step + 1) newSymTableV);
     }
 
+showAnswer :: Symtable -> InputT IO ()
+showAnswer symTableV = outputStrLn (showAnswerS symTableV)
+
+evalSListIO :: String -> Symtable -> InputT IO Symtable
+evalSListIO programString initialSymTableV = do {
+  outputStrLn message;
+  return symTableV;
+  } where
+    (message, symTableV) = evalSListS programString initialSymTableV
+
+evalExprIO :: String -> Symtable -> InputT IO Symtable
+evalExprIO ss symtable = do {
+  case (parseExpression ss) of
+    Left err -> do {
+      outputStrLn ("syntax error, " ++ (show err));
+      return symtable
+    }
+    Right expr -> do {
+      outputStrLn ("\nans = \n" ++ (exprValToString symtable expr));
+      return symtable
+    }
+}
+
+
 replExp :: IO ()
 replExp = runInputT defaultSettings (loop evalExprIO (R 0 empty))
 

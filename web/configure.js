@@ -17,6 +17,12 @@ generateProject(_ => {
     _.compileFiles(...([command, product, dir].concat(deps)))
   }
 
+  _.copy = (dir, ...deps) => {
+    var command = (_) => `cat ${_.source} > ${_.product}`
+    var product = (_) => `${_.source}.cpy.js`
+    _.compileFiles(...([command, product, dir].concat(deps)))
+  }
+
   _.collect("all", _ => {
 
     _.toFile("_site/index.html", _ => {
@@ -24,11 +30,11 @@ generateProject(_ => {
     })
 
     _.toFile("_site/client.js", _ => {
-      _.minify(_ => {
+      _.concat(_ => {
         _.browserify("src/index.js", "src/*.less")
       })
+      _.copy("./lib/Octave.js")
     })
-
   })
 
   _.collectSeq("update", _ => {

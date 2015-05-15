@@ -10,7 +10,6 @@ import           Data.Map.Strict          (empty, lookup)
 import           Data.Matrix
 import           Expr
 import           Symtable
-import           System.Console.Haskeline
 
 
 eeval:: Symtable -> Expr -> Either String MOD
@@ -52,16 +51,3 @@ exprValToString symtable expr =
     case (eeval symtable expr) of
     (Left err) -> "error: " ++ err
     (Right v) -> (show v)
-
-evalExprIO :: String -> Symtable -> InputT IO Symtable
-evalExprIO ss symtable = do {
-  case (parseExpression ss) of
-    Left err -> do {
-      outputStrLn ("syntax error, " ++ (show err));
-      return symtable
-    }
-    Right expr -> do {
-      outputStrLn ("\nans = \n" ++ (exprValToString symtable expr));
-      return symtable
-    }
-}

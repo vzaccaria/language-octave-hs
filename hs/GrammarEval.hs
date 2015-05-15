@@ -1,3 +1,7 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+
+
 module GrammarEval where
 
 import           AST
@@ -10,7 +14,6 @@ import           ExprEval
 import           GHC.List
 import           Grammar
 import           Symtable
-import           System.Console.Haskeline
 
 type ProgramState = Either String Symtable
 type ProgramStateProcessor = State ProgramState ()
@@ -52,27 +55,24 @@ evalSList statementListV initialSymTableV =
               old = (execState accStateProc)
               new = (execState curStateV)
 
-showAnswer :: Symtable -> InputT IO ()
-showAnswer symTableV = case (Data.Map.Strict.lookup "ans" symTableV) of
-  (Just v) -> outputStrLn ("\nans = \n" ++ (show v))
-  _ -> outputStr "ans = NA"
+showAnswerS :: Symtable -> String
+showAnswerS symTableV = case (Data.Map.Strict.lookup "ans" symTableV) of
+  (Just v) -> "\nans = \n" ++ (show v)
+  _ -> "ans = NA"
 
-evalSListIO :: String -> Symtable -> InputT IO Symtable
-evalSListIO programString initialSymTableV = do {
+evalProgramIO :: String -> IO String
+evalProgramIO x = return (evalProgram x)
+
+evalProgram :: String -> String
+evalProgram programString = outputString where
+  (outputString, _) = evalSListS programString Data.Map.Strict.empty
+
+evalSListS :: String -> Symtable -> (String, Symtable)
+
+evalSListS programString initialSymTableV =
   case (parseStatements (programString ++ ";")) of
-    Left err -> do {
-      outputStrLn ("syntax error, " ++ (show err));
-      return initialSymTableV
-    }
-    Right statementListV -> do {
+    Left err -> (("syntax error, " ++ (show err)), initialSymTableV);
+    Right statementListV ->
       case evalSList statementListV initialSymTableV of
-        Left errorV -> do {
-          outputStrLn ("error, " ++ (errorV));
-          return initialSymTableV
-        }
-        Right newSymTableV -> do {
-          showAnswer newSymTableV;
-          return newSymTableV
-        }
-    }
-}
+        Left errorV -> (("error, " ++ (errorV)), initialSymTableV)
+        Right newSymTableV -> (showAnswerS newSymTableV, newSymTableV)

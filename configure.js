@@ -12,11 +12,7 @@ generateProject(_ => {
     _.compileFiles(...([command, product, dir].concat(deps)))
   }
 
-  _.haste = (dir, ...deps) => {
-    var command = (_) => `hastec '--start=hasteMain(); module.exports = Haste' -ihs ${_.source} -o ${_.product}`
-    var product = (_) => `./lib/${path.basename(_.source, '.hs')}.js`
-    _.compileFiles(...([command, product, dir].concat(deps)))
-  }
+
 
   _.verb = (verbfile, deps) => {
     var command = () => `./node_modules/.bin/verb`
@@ -27,9 +23,11 @@ generateProject(_ => {
   _.collectSeq("all", _ => {
     _.collect("build", _ => {
       _.babel("src/*.js")
-      _.haste("hs/Octave.hs", "hs/*.hs")
+      _.cmd("cd hs && make")
     })
+    _.cmd("cp ./hs/Octave.js ./lib")
     _.cmd("cp ./lib/index.js ./index.js")
+    _.cmd("cd web && make")
     _.cmd("./node_modules/.bin/markdox ./index.js -o docs/api.md")
     _.verb("./verbfile.js", "docs/*.md")
   })
