@@ -2,7 +2,7 @@
 
 module Main where
 
-import           GrammarEval
+import           Repl
 
 main :: IO ()
-main = putStrLn $ evalProgram " a = 2 + 2 "
+main = replSListBrowser
