@@ -3,6 +3,7 @@
 module Repl where
 
 import           AST
+import           Browser
 import qualified Control.Exception        as E
 import           Data.Map.Strict
 import           Expr
@@ -20,11 +21,29 @@ data ReplState = R {
   _symtable :: Symtable
 }
 
-prompt :: Int -> IO String
-prompt i = do {
-    printf "%d > " i;
-    getLine
-  }
+
+
+evalSListIOBrowser :: String -> Symtable -> IO Symtable
+evalSListIOBrowser programString initialSymTableV = E.catch action handler
+  where
+      action = do {
+          _ <- printBrowser message;
+          return symTableV
+          }
+      (message, symTableV) = evalSListS programString initialSymTableV
+      handler :: SomeException -> IO Symtable
+      handler = (\e -> do { _ <- printBrowser (show e); return initialSymTableV })
+
+loopBrowser:: (String -> Symtable -> IO Symtable) -> ReplState -> IO ()
+loopBrowser eio (R step symtable) = do
+  s <- askBrowser
+  case s of
+    "exit" -> return ()
+    "quit" -> return ()
+    ss -> do {
+      newSymTableV <- eio ss symtable;
+      loopBrowser eio (R (step + 1) newSymTableV);
+    }
 
 loop:: (String -> Symtable -> InputT IO Symtable) -> ReplState -> InputT IO ()
 loop eio (R step symtable) = do
@@ -61,6 +80,8 @@ evalExprIO ss symtable = do {
     }
 }
 
+replSListBrowser :: IO ()
+replSListBrowser = loopBrowser evalSListIOBrowser (R 0 empty)
 
 replExp :: IO ()
 replExp = runInputT defaultSettings (loop evalExprIO (R 0 empty))
