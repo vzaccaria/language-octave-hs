@@ -1,3 +1,3 @@
-global["main"] = function() {
+global["main"] = function () {
   h$run(h$mainZCMainzimain);
 }

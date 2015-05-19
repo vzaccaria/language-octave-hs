@@ -10,7 +10,7 @@ var _module = () => {
 
   return {
     foo
-  }
+  
 }
 
 module.exports = _module()
