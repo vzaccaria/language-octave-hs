@@ -57,7 +57,7 @@ evalSList statementListV initialSymTableV =
 
 showAnswerS :: Symtable -> String
 showAnswerS symTableV = case (Data.Map.Strict.lookup "ans" symTableV) of
-  (Just v) -> "\nans = \n" ++ (show v)
+  (Just v) -> "\nans = \n" ++ (printMOD v)
   _ -> "ans = NA"
 
 evalProgramIO :: String -> IO String
