@@ -64,7 +64,7 @@ var produceHaskell = _ => {
   "use strict"
   _.collect("build-haskell", _ => {
     _.toFile("./lib/Octave.js", _ => {
-      _.ghcjs("./hs/Octave.hs")
+      _.ghcjs("./hs/Octave.hs", "./hs/*.hs")
     })
   })
 }
