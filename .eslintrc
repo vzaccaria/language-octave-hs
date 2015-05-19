@@ -10,6 +10,7 @@
     "semi": "never",
     "eol-last": false,
     "no-shadow": false,
-    "no-underscore-dangle": false
+    "no-underscore-dangle": false,
+    "strict": false
   }
 }
