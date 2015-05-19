@@ -1,11 +1,25 @@
+{-# LANGUAGE OverloadedStrings #-}
 
 module Symtable where
 
+import qualified Data.List              as L
 import           Data.Map.Strict
-import           Data.Matrix
+import qualified Data.Matrix            as M
+import qualified Data.Vector            as V
+import           Debug.Trace
+import           GHC.Base
+import qualified Text.PrettyPrint.Boxes as B
 
-data OD = I Integer | D Double | C Char deriving Show
-type MOD = Matrix OD
+--  __  __       _        _
+-- |  \/  | __ _| |_ _ __(_)_  __
+-- | |\/| |/ _` | __| '__| \ \/ /
+-- | |  | | (_| | |_| |  | |>  <
+-- |_|  |_|\__,_|\__|_|  |_/_/\_\
+--
+
+
+data OD = I Integer | D Double | C Char
+type MOD = M.Matrix OD
 
 instance Num OD where
 
@@ -26,14 +40,47 @@ instance Num OD where
   negate (I x) = (I (-1 * x))
   negate x = (D (-1.0 * (toOctaveNum x)))
 
+instance Show OD where
+  show (I v) = show v
+  show (D v) = show v
+  show (C v) = show v
+
 
 toOctaveNum :: OD -> Double
 toOctaveNum (I a) = fromInteger(a)
 toOctaveNum (D b) = b
 toOctaveNum (C c) = fromIntegral(fromEnum(c))
 
-toNumeric:: Matrix OD -> Matrix Double
-toNumeric o = fmap toOctaveNum o
+
+buildBoxRow :: V.Vector OD -> B.Box
+buildBoxRow r = B.hcat B.right values where
+  values = V.toList (fmap convertToBox r)
+  convertToBox v = B.moveRight 4 (B.text (show v))
+
+buildBoxMatrix :: M.Matrix OD -> B.Box
+buildBoxMatrix m = traceShow (prows) $ B.vcat B.top brows where
+  brows = fmap buildBoxRow prows
+  prows = fmap (\x -> (M.getRow x m)) [ 1 .. k ]
+  k = (M.nrows m)
+
+
+printRow :: V.Vector OD -> String
+printRow x = L.foldl1 (GHC.Base.++) (fmap (\e -> show (x V.! e)) [ 0.. ((V.length x) - 1)])
+
+printMOD :: M.Matrix OD -> String
+printMOD m = B.render (buildBoxMatrix m)
+
+-- printMOD v = L.foldl1 (GHC.Base.++) (fmap (\x -> printRow (getRow x v)) [ 1 .. k ])
+          -- where k = (nrows v)
+
+--  ____                  _        _     _
+-- / ___| _   _ _ __ ___ | |_ __ _| |__ | | ___
+-- \___ \| | | | '_ ` _ \| __/ _` | '_ \| |/ _ \
+--  ___) | |_| | | | | | | || (_| | |_) | |  __/
+-- |____/ \__, |_| |_| |_|\__\__,_|_.__/|_|\___|
+--        |___/
+--
+
 
 type Symtable = Map String MOD
 
