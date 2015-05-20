@@ -17,9 +17,15 @@ import qualified Text.PrettyPrint.Boxes as B
 -- |_|  |_|\__,_|\__|_|  |_/_/\_\
 --
 
+--                   invar   outvar   body
+data Lambda =
+  Lam [String] [String] [Statement] |
+  Op1 (MOD -> MOD) |
+  Op2 (MOD -> MOD -> MOD)
+
 
 data OD = I Integer | D Double | C Char
-data MOD = M (M.Matrix OD) | F Lambda
+data MOD = M (M.Matrix OD) | F Lambda | DF
 
 instance Num OD where
 
@@ -69,6 +75,7 @@ printRow x = L.foldl1 (GHC.Base.++) (fmap (\e -> show (x V.! e)) [ 0.. ((V.lengt
 
 printMOD :: MOD -> String
 printMOD (M m) = B.render (buildBoxMatrix m)
+printMOD (DF)  = ":"
 printMOD (F _) = error "Lambdas are not printable at the moment"
 
 -- printMOD v = L.foldl1 (GHC.Base.++) (fmap (\x -> printRow (getRow x v)) [ 1 .. k ])
@@ -87,3 +94,6 @@ type Symtable = Map String MOD
 
 assign :: (String, MOD) -> Symtable -> Symtable
 assign (k, v) s = insert k v s
+
+emptyTable :: Map k a
+emptyTable = empty

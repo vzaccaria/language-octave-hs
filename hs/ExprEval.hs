@@ -6,9 +6,10 @@ import           AST
 import           Control.Applicative
 import           Control.Applicative.Lift
 import qualified Data.List                as L
-import           Data.Map.Strict          (empty, lookup)
+import qualified Data.Map.Strict          as M (empty, lookup)
 import qualified Data.Matrix              as X
 import           Expr
+import           Function
 import qualified Symtable                 as S
 
 
@@ -54,9 +55,20 @@ eeval s (Range a b) =
 
 -- Ok, lets start with the boogie here..
 eeval symtable (Eval var []) =
-  case (Data.Map.Strict.lookup var symtable) of
+  case (M.lookup var symtable) of
     (Just x) -> return x
     (Nothing) -> Left ("symbol `" ++ var ++ "` not found")
+
+eeval symtable (Eval symbol elist) =
+  case (M.lookup symbol symtable) of
+    (Just (S.F l)) -> do {
+      eli <- (sequence (L.map (eeval symtable) elist));
+      return $ evalFunction l eli
+    }
+    _ ->
+      error "Evaluating array elements not yet implemented!"
+
+
 
 
 exprValToString :: S.Symtable -> Expr -> String

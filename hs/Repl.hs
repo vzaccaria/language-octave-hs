@@ -8,6 +8,7 @@ import qualified Control.Exception        as E
 import           Data.Map.Strict
 import           Expr
 import           ExprEval
+import           Function
 import           GrammarEval
 import           Symtable
 import           System.Console.Haskeline
@@ -80,11 +81,12 @@ evalExprIO ss symtable = do {
     }
 }
 
+
 replSListBrowser :: IO ()
-replSListBrowser = loopBrowser evalSListIOBrowser (R 0 empty)
+replSListBrowser = loopBrowser evalSListIOBrowser (R 0 initialSymTable)
 
 replExp :: IO ()
-replExp = runInputT defaultSettings (loop evalExprIO (R 0 empty))
+replExp = runInputT defaultSettings (loop evalExprIO (R 0 initialSymTable))
 
 replSList :: IO ()
-replSList = runInputT defaultSettings (loop evalSListIO (R 0 empty))
+replSList = runInputT defaultSettings (loop evalSListIO (R 0 initialSymTable))
