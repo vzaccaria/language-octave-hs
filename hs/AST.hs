@@ -23,3 +23,6 @@ data Statement =
   | Assign String (Maybe [Expr]) Expr
   | Function (Maybe String) [String] [String] [Statement]
   deriving Show
+
+--                   invar   outvar   body
+data Lambda = Lam [String] [String] [Statement]

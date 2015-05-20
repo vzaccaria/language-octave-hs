@@ -2,11 +2,11 @@
 
 module Symtable where
 
+import           AST
 import qualified Data.List              as L
 import           Data.Map.Strict
 import qualified Data.Matrix            as M
 import qualified Data.Vector            as V
-import           Debug.Trace
 import           GHC.Base
 import qualified Text.PrettyPrint.Boxes as B
 
@@ -19,7 +19,7 @@ import qualified Text.PrettyPrint.Boxes as B
 
 
 data OD = I Integer | D Double | C Char
-type MOD = M.Matrix OD
+data MOD = M (M.Matrix OD) | F Lambda
 
 instance Num OD where
 
@@ -58,7 +58,7 @@ buildBoxRow r = B.hcat B.right values where
   convertToBox v = B.moveRight 4 (B.text (show v))
 
 buildBoxMatrix :: M.Matrix OD -> B.Box
-buildBoxMatrix m = traceShow (prows) $ B.vcat B.top brows where
+buildBoxMatrix m = B.vcat B.top brows where
   brows = fmap buildBoxRow prows
   prows = fmap (\x -> (M.getRow x m)) [ 1 .. k ]
   k = (M.nrows m)
@@ -67,8 +67,9 @@ buildBoxMatrix m = traceShow (prows) $ B.vcat B.top brows where
 printRow :: V.Vector OD -> String
 printRow x = L.foldl1 (GHC.Base.++) (fmap (\e -> show (x V.! e)) [ 0.. ((V.length x) - 1)])
 
-printMOD :: M.Matrix OD -> String
-printMOD m = B.render (buildBoxMatrix m)
+printMOD :: MOD -> String
+printMOD (M m) = B.render (buildBoxMatrix m)
+printMOD (F _) = error "Lambdas are not printable at the moment"
 
 -- printMOD v = L.foldl1 (GHC.Base.++) (fmap (\x -> printRow (getRow x v)) [ 1 .. k ])
           -- where k = (nrows v)

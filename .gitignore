@@ -6,3 +6,4 @@ main/*.*
 main
 web/_site
 Octave.js
+CliOctave
