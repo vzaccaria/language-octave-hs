@@ -17,15 +17,20 @@ import qualified Text.PrettyPrint.Boxes as B
 -- |_|  |_|\__,_|\__|_|  |_/_/\_\
 --
 
+data OD = I Integer | D Double | C Char
+data MOD = M (M.Matrix OD) | F Lambda | DF
+
+type OctaveNumericMatrix = M.Matrix OD
+type OctaveValue = MOD
+type OctaveNumeric = OD
+type MaybeOctaveValue = Either String OctaveValue
+
 --                   invar   outvar   body
 data Lambda =
   Lam [String] [String] [Statement] |
-  Op1 (MOD -> MOD) |
-  Op2 (MOD -> MOD -> MOD)
+  Op1 (OctaveValue -> Either String OctaveValue) |
+  Op2 (OctaveValue -> OctaveValue -> Either String OctaveValue)
 
-
-data OD = I Integer | D Double | C Char
-data MOD = M (M.Matrix OD) | F Lambda | DF
 
 instance Num OD where
 
@@ -52,28 +57,28 @@ instance Show OD where
   show (C v) = show v
 
 
-toOctaveNum :: OD -> Double
+toOctaveNum :: OctaveNumeric -> Double
 toOctaveNum (I a) = fromInteger(a)
 toOctaveNum (D b) = b
 toOctaveNum (C c) = fromIntegral(fromEnum(c))
 
 
-buildBoxRow :: V.Vector OD -> B.Box
+buildBoxRow :: V.Vector OctaveNumeric -> B.Box
 buildBoxRow r = B.hcat B.right values where
   values = V.toList (fmap convertToBox r)
   convertToBox v = B.moveRight 4 (B.text (show v))
 
-buildBoxMatrix :: M.Matrix OD -> B.Box
+buildBoxMatrix :: M.Matrix OctaveNumeric -> B.Box
 buildBoxMatrix m = B.vcat B.top brows where
   brows = fmap buildBoxRow prows
   prows = fmap (\x -> (M.getRow x m)) [ 1 .. k ]
   k = (M.nrows m)
 
 
-printRow :: V.Vector OD -> String
+printRow :: V.Vector OctaveNumeric -> String
 printRow x = L.foldl1 (GHC.Base.++) (fmap (\e -> show (x V.! e)) [ 0.. ((V.length x) - 1)])
 
-printMOD :: MOD -> String
+printMOD :: OctaveValue -> String
 printMOD (M m) = B.render (buildBoxMatrix m)
 printMOD (DF)  = ":"
 printMOD (F _) = error "Lambdas are not printable at the moment"
@@ -90,9 +95,9 @@ printMOD (F _) = error "Lambdas are not printable at the moment"
 --
 
 
-type Symtable = Map String MOD
+type Symtable = Map String OctaveValue
 
-assign :: (String, MOD) -> Symtable -> Symtable
+assign :: (String, OctaveValue) -> Symtable -> Symtable
 assign (k, v) s = insert k v s
 
 emptyTable :: Map k a

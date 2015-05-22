@@ -8,34 +8,33 @@ import           Control.Applicative.Lift
 import qualified Data.List                as L
 import qualified Data.Map.Strict          as M (empty, lookup)
 import qualified Data.Matrix              as X
+import           Errors
 import           Expr
 import           Function
 import qualified Symtable                 as S
 
 
-type Matrixfun2 = X.Matrix S.OD -> X.Matrix S.OD -> X.Matrix S.OD
-type ModFun2 = S.MOD -> S.MOD -> S.MOD
-
-apply2 :: Matrixfun2 -> ModFun2
-apply2 f = q where
-  q (S.M m1) (S.M m2) = (S.M (f m1 m2))
-  q _ _ = error "unsupported application"
+applyNumeric2 :: (S.OctaveNumericMatrix -> S.OctaveNumericMatrix -> S.OctaveNumericMatrix) ->
+                 (S.MaybeOctaveValue -> S.MaybeOctaveValue -> S.MaybeOctaveValue)
+applyNumeric2 f = q where
+  q (Right (S.M m1)) (Right (S.M m2)) = (Right (S.M (f m1 m2)))
+  q _ _ = Left "unsupported application"
 
 
-eeval:: S.Symtable -> Expr -> Either String S.MOD
+eeval:: S.Symtable -> Expr -> Either String S.OctaveValue
 
 eeval _ (ConstI i)        = return $ S.M (X.fromList 1 1 [ S.I i ])
 eeval _ (ConstD f)        = return $ S.M (X.fromList 1 1 [ S.D f ])
 eeval _ (Str st)          = return $ S.M (X.matrix 1 (length st) $ \(_,j) -> (S.C (st !! (j - 1))))
 
-eeval s (BinOp "+" e1 e2) = (liftA2 (apply2 (+))) (eeval s e1) (eeval s e2)
-eeval s (BinOp "-" e1 e2) = (liftA2 (apply2 (-))) (eeval s e1) (eeval s e2)
-eeval s (BinOp "*" e1 e2) = (liftA2 (apply2 (*))) (eeval s e1) (eeval s e2)
+eeval s (BinOp "+" e1 e2) = applyNumeric2 (+) (eeval s e1) (eeval s e2)
+eeval s (BinOp "-" e1 e2) = applyNumeric2 (-) (eeval s e1) (eeval s e2)
+eeval s (BinOp "*" e1 e2) = applyNumeric2 (*) (eeval s e1) (eeval s e2)
 
-eeval s (Row es) = L.foldl1 (liftA2 (apply2 (X.<|>))) dt
+eeval s (Row es) = L.foldl1 (applyNumeric2 (X.<|>)) dt
       where dt = (fmap (eeval s) es)
 
-eeval s (Matrix es) = L.foldl1 (liftA2 (apply2 (X.<->)) ) dt
+eeval s (Matrix es) = L.foldl1 (applyNumeric2 (X.<->)) dt
       where dt = (fmap (eeval s) es)
 
 eeval s (Range a b) =
@@ -45,7 +44,7 @@ eeval s (Range a b) =
         return $ (S.M (X.matrix 1 (s1+1) $ \(_,j) -> (S.I ((toInteger j) + i1 - 1))))
 
     _
-      -> Left "range specification should be specified with integers"
+      -> _eRangeInvalid
   where
         f1 = (liftA2 (_getEl)) (eeval s a) (Right (1,1))
         f2 = (liftA2 (_getEl)) (eeval s b) (Right (1,1))
@@ -63,10 +62,10 @@ eeval symtable (Eval symbol elist) =
   case (M.lookup symbol symtable) of
     (Just (S.F l)) -> do {
       eli <- (sequence (L.map (eeval symtable) elist));
-      return $ evalFunction l eli
+      evalFunction l eli
     }
-    _ ->
-      error "Evaluating array elements not yet implemented!"
+    Nothing -> Left "Symbol not found"
+    _ -> Left "Evaluating array elements not yet implemented!"
 
 
 
@@ -77,3 +76,4 @@ exprValToString symtable expr =
     (Left err) -> "error: " ++ err
     (Right (S.M v)) -> (show v)
     (Right (S.F _)) -> "[Function handle]"
+    (Right (S.DF)) -> "DEFAULT"
