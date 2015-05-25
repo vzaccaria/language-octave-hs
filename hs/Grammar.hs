@@ -8,7 +8,6 @@ import           Control.Applicative                 hiding (many, optional,
 import           Data.Map.Strict
 import           Expr
 import           Lexer
-import           Symtable
 import           Text.ParserCombinators.Parsec
 import           Text.ParserCombinators.Parsec.Error
 
