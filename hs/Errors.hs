@@ -2,14 +2,23 @@
 module Errors where
 
 
-_eWrongNumberOfArguments :: Either String b
-_eWrongNumberOfArguments = Left ("You are passing more parameters than needed")
+_eWrongNumberOfArguments :: String
+_eWrongNumberOfArguments =  ("You are passing more parameters than needed")
 
-_eNotYetImplemented :: Either [Char] b
-_eNotYetImplemented      = Left ("Lambda not yet implemented")
+_eNotYetImplemented :: String
+_eNotYetImplemented      =  ("Not yet implemented")
 
-_eInvalidIndexing :: Either String b
-_eInvalidIndexing        = Left ("Invalid indexes specified")
+_eInvalidIndexing :: String
+_eInvalidIndexing        =  ("Invalid indexes specified")
 
-_eRangeInvalid :: Either String b
-_eRangeInvalid           = Left "range specification should be specified with integers"
+_eRangeInvalid :: String
+_eRangeInvalid           =  "Range specification should be specified with integers"
+
+_eInvalidArguments :: String
+_eInvalidArguments       = "Can't interpret symbolic matrix as numeric matrix"
+
+_symbolNotFound :: String -> String
+_symbolNotFound var = ("symbol `" ++ var ++ "` not found")
+
+_eLowLevelOperation:: String
+_eLowLevelOperation=  ("Low level operation error")

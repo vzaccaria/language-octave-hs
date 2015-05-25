@@ -13,7 +13,7 @@ data Expr =
   | Row [ Expr ]
   | BinOp String Expr Expr
   | Unop String Expr
-  | Eval String [Expr]
+  | EEval String [Expr]
   | Default
   deriving Show
 

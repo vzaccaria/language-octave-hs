@@ -10,26 +10,26 @@ import           Control.Applicative.Lift
 import           Control.Monad.Trans.State.Lazy
 import           Data.Map.Strict                (empty, insert, lookup)
 import           Data.Matrix
+import           Eval
 import           ExprEval
 import           GHC.List
 import           Grammar
-import           Symtable
 
-type ProgramState = Either String Symtable
+type ProgramState = Either String Env
 type ProgramStateProcessor = State ProgramState ()
 type PureStateTransition = (ProgramState -> ProgramState)
 
-addAnswer :: MOD -> Symtable -> Symtable
+addAnswer :: MValue -> Env -> Env
 addAnswer valueV symTableV = insert "ans" valueV symTableV
 
-statementEval :: Statement -> Symtable -> Either String Symtable
+statementEval :: Statement -> Env -> Either String Env
 statementEval (Assign varNameV Nothing expressionV) symTableV =
-    case (eeval symTableV expressionV) of
+    case (exprVal symTableV expressionV) of
       Left errorV -> (Left errorV)
       Right valueV -> (Right (insert varNameV valueV (addAnswer valueV symTableV)))
 
 statementEval (JustExp expressionV) symTableV = do {
-    ans <- eeval symTableV expressionV;
+    ans <- exprVal symTableV expressionV;
     Right (addAnswer ans symTableV)
   }
 
@@ -45,7 +45,7 @@ statementEvalTrampoline statementV = do {
       }
 }
 
-evalSList :: [Statement] -> Symtable -> ProgramState
+evalSList :: [Statement] -> Env -> ProgramState
 evalSList statementListV initialSymTableV =
       let stateProcessors = fmap statementEvalTrampoline statementListV
           initialState = return initialSymTableV
@@ -55,9 +55,9 @@ evalSList statementListV initialSymTableV =
               old = (execState accStateProc)
               new = (execState curStateV)
 
-showAnswerS :: Symtable -> String
+showAnswerS :: Env -> String
 showAnswerS symTableV = case (Data.Map.Strict.lookup "ans" symTableV) of
-  (Just v) -> "\nans = \n" ++ (printMOD v)
+  (Just v) -> "\nans = \n" ++ (printMValue v)
   _ -> "ans = NA"
 
 evalProgramIO :: String -> IO String
@@ -67,7 +67,7 @@ evalProgram :: String -> String
 evalProgram programString = outputString where
   (outputString, _) = evalSListS programString Data.Map.Strict.empty
 
-evalSListS :: String -> Symtable -> (String, Symtable)
+evalSListS :: String -> Env -> (String, Env)
 
 evalSListS programString initialSymTableV =
   case (parseStatements (programString ++ ";")) of

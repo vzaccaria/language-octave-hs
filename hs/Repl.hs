@@ -4,27 +4,25 @@ module Repl where
 
 import           AST
 import           Browser
+import           BuiltIns
 import qualified Control.Exception        as E
 import           Data.Map.Strict
+import           Eval
 import           Expr
 import           ExprEval
-import           Function
 import           GrammarEval
-import           Symtable
 import           System.Console.Haskeline
 import           Text.Printf
 
 
-
-
 data ReplState = R {
   _step     :: Int,
-  _symtable :: Symtable
+  _symtable :: Env
 }
 
 
 
-evalSListIOBrowser :: String -> Symtable -> IO Symtable
+evalSListIOBrowser :: String ->  Env -> IO Env
 evalSListIOBrowser programString initialSymTableV = E.catch action handler
   where
       action = do {
@@ -32,10 +30,10 @@ evalSListIOBrowser programString initialSymTableV = E.catch action handler
           return symTableV
           }
       (message, symTableV) = evalSListS programString initialSymTableV
-      handler :: SomeException -> IO Symtable
+      handler :: SomeException -> IO Env
       handler = (\e -> do { _ <- printBrowser (show e); return initialSymTableV })
 
-loopBrowser:: (String -> Symtable -> IO Symtable) -> ReplState -> IO ()
+loopBrowser:: (String ->  Env -> IO  Env) -> ReplState -> IO ()
 loopBrowser eio (R step symtable) = do
   s <- askBrowser
   case s of
@@ -46,7 +44,7 @@ loopBrowser eio (R step symtable) = do
       loopBrowser eio (R (step + 1) newSymTableV);
     }
 
-loop:: (String -> Symtable -> InputT IO Symtable) -> ReplState -> InputT IO ()
+loop:: (String ->  Env -> InputT IO  Env) -> ReplState -> InputT IO ()
 loop eio (R step symtable) = do
   s <- getInputLine ("minioctave:" ++ (show step) ++ "> ")
   case s of
@@ -58,17 +56,17 @@ loop eio (R step symtable) = do
       loop eio (R (step + 1) newSymTableV);
     }
 
-showAnswer :: Symtable -> InputT IO ()
+showAnswer ::  Env -> InputT IO ()
 showAnswer symTableV = outputStrLn (showAnswerS symTableV)
 
-evalSListIO :: String -> Symtable -> InputT IO Symtable
+evalSListIO :: String ->  Env -> InputT IO Env
 evalSListIO programString initialSymTableV = do {
   outputStrLn message;
   return symTableV;
   } where
     (message, symTableV) = evalSListS programString initialSymTableV
 
-evalExprIO :: String -> Symtable -> InputT IO Symtable
+evalExprIO :: String ->  Env -> InputT IO Env
 evalExprIO ss symtable = do {
   case (parseExpression ss) of
     Left err -> do {

@@ -28,12 +28,12 @@ _primary_expression =
                   <|> _default
 
 _eval_sym :: Parser Expr
-_eval_sym = do { v <- _id; return (Eval v []) }
+_eval_sym = do { v <- _id; return (EEval v []) }
 
 _eval_indexed_sym :: Parser Expr
 _eval_indexed_sym = do { v <- _id;
                  elist <-  _parens( sepBy _expr (_reserved ","));
-                 return (Eval v elist) }
+                 return (EEval v elist) }
 
 _string:: Parser Expr
 _string = (Str <$> _stringLiteral)
