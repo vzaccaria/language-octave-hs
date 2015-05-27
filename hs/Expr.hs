@@ -76,8 +76,8 @@ table   = [
                 prefix "+" (Unop "+"),
                 prefix "-" (Unop "-")],
 
-              [  postfix "'" (CTran),
-                postfix ".'" (Tran) ],
+              [   postfix "'" (CTran),
+                  postfix ".'" (Tran) ],
 
               [
                 binary "*" (BinOp "*") AssocLeft,
