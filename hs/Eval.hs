@@ -8,6 +8,7 @@ import           AST
 import           Control.Monad.Error    hiding (sequence)
 import           Control.Monad.Identity hiding (sequence)
 import           Control.Monad.Reader   hiding (sequence)
+import           Data.Complex
 import           Data.List              as L
 import           Data.Map               hiding (fromList, (!))
 import           Data.Matrix
@@ -19,10 +20,10 @@ import           Prelude                hiding (sequence)
 import           PrettyPrint
 import qualified Text.PrettyPrint.Boxes as B
 
-data ScalarNum    = In Integer | Do Double | Ch Char
+data ScalarNum    = In Integer | Do Double | Ch Char | Co (Complex Double)
 type NumMat       = Matrix ScalarNum
 
-data Value        = I Integer | D Double | C Char | L Lambda | DF deriving Show
+data Value        = I Integer | D Double | O (Complex Double) | C Char | L Lambda | DF deriving Show
 type MValue       = Matrix Value
 
 type Env = Map String MValue
@@ -43,7 +44,16 @@ runEval3 :: Env -> Eval a -> Either String a
 runEval3 env ev = runIdentity (runErrorT (runReaderT ev env))
 
 -- Num instance for ScalarNum
+liftUnOp :: (NumMat -> NumMat) -> Eval MValue -> Eval MValue
+liftUnOp op v1 = do {
+  vv1 <- v1;
+  a1 <- toNumMat vv1;
+  (fromNumMat (op a1))
+} `catchError` (\_ -> (fail _eLowLevelOperation))
 
+
+
+-- Num instance for ScalarNum
 liftBinOp :: (NumMat -> NumMat -> NumMat) -> Eval MValue -> Eval MValue -> Eval MValue
 liftBinOp op v1 v2 = do {
   vv1 <- v1;
@@ -53,36 +63,53 @@ liftBinOp op v1 v2 = do {
    (fromNumMat (op a1 a2))
 } `catchError` (\_ -> (fail _eLowLevelOperation))
 
+liftEwiseOp :: (ScalarNum -> ScalarNum) -> Eval MValue -> Eval MValue
+liftEwiseOp op v1 = do {
+  vv1 <- v1;
+  a1 <- toNumMat vv1;
+  (fromNumMat (fmap op a1))
+} `catchError` (\_ -> (fail _eLowLevelOperation))
+
+numMatConjugate :: ScalarNum -> ScalarNum
+numMatConjugate (Co c) = Co (conjugate c)
+numMatConjugate x = x
+
+conj :: NumMat -> NumMat
+conj m = fmap numMatConjugate m
 
 instance Num ScalarNum where
 
   (+) (In d1) (In d2) = (In (d1 + d2))
-  (+) x1 x2 = (Do (toOctaveNum(x1) + toOctaveNum(x2)))
+  (+) x1 x2 = (Co (toOctaveNum(x1) + toOctaveNum(x2)))
 
   (*) (In d1) (In d2) = (In (d1 * d2))
-  (*) x1 x2 = (Do (toOctaveNum(x1) * toOctaveNum(x2)))
+  (*) x1 x2 = (Co (toOctaveNum(x1) * toOctaveNum(x2)))
 
   abs (In i1) = In (abs i1)
-  abs x = Do (toOctaveNum(x))
+  abs (Do d1) = Do (abs (d1))
+  abs (Co c1) = Co (abs (c1))
+  abs (Ch c1) = Ch c1
 
-  signum x = Do (signum (toOctaveNum x))
+  signum x = Co (signum (toOctaveNum x))
 
   fromInteger x = (In x)
 
   negate (Do x) = (Do (-1 * x))
   negate (In x) = (In (-1 * x))
-  negate x = (Do (-1.0 * (toOctaveNum x)))
+  negate x = (Co (-1.0 * (toOctaveNum x)))
 
 instance Show ScalarNum where
   show (In v) = show v
   show (Do v) = show v
   show (Ch v) = show v
+  show (Co v) = show (realPart v) ++ " + " ++ show (imagPart v) ++ "i"
 
 
-toOctaveNum :: ScalarNum -> Double
+toOctaveNum :: ScalarNum -> (Complex Double)
 toOctaveNum (In a) = fromInteger(a)
-toOctaveNum (Do b) = b
+toOctaveNum (Do b) = (b :+ 0)
 toOctaveNum (Ch c) = fromIntegral(fromEnum(c))
+toOctaveNum (Co c) = c
 
 
 buildBoxRow :: V.Vector ScalarNum -> B.Box
@@ -115,6 +142,7 @@ toNum x = case x of
   (I i1) -> return (In i1)
   (D d1) -> return (Do d1)
   (C c1) -> return (Ch c1)
+  (Eval.O c1) -> return (Co c1)
   _ -> fail _eInvalidArguments
 
 fromNum :: ScalarNum -> Eval Value
@@ -122,6 +150,7 @@ fromNum x = case x of
   (In i1) -> return (I i1)
   (Do d1) -> return (D d1)
   (Ch c1) -> return (C c1)
+  (Co c) -> return (Eval.O c)
 
 
 toNumMat :: MValue -> Eval NumMat

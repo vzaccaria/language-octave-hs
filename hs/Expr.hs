@@ -22,7 +22,7 @@ _primary_expression:: Parser Expr
 _primary_expression =
                   try (_eval_indexed_sym)
                   <|> try (_eval_sym)
-                  <|> _number
+                  <|> try (_number)
                   <|> (_parens _expr)
                   <|> _matrix
                   <|> _default
@@ -39,13 +39,19 @@ _string:: Parser Expr
 _string = (Str <$> _stringLiteral)
 
 _number :: Parser Expr
-_number = (try _float_const_e) <|> _int_const_e
+_number =
+        (try _complex_const_e)
+    <|> (try _float_const_e)
+    <|> (try _int_const_e)
 
 _int_const_e :: Parser Expr
 _int_const_e = ConstI <$> _int
 
 _float_const_e :: Parser Expr
 _float_const_e = ConstD <$> _double
+
+_complex_const_e :: Parser Expr
+_complex_const_e = ConstC <$> ((try _imaginary_d) <|> (try _imaginary_i))
 
 _default:: Parser Expr
 _default = do { _reserved ":"; return Default }
@@ -70,8 +76,8 @@ table   = [
                 prefix "+" (Unop "+"),
                 prefix "-" (Unop "-")],
 
-              [  postfix "'" (Tran),
-                postfix ".'" (NTran) ],
+              [  postfix "'" (CTran),
+                postfix ".'" (Tran) ],
 
               [
                 binary "*" (BinOp "*") AssocLeft,

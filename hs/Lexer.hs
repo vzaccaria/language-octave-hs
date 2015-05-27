@@ -2,6 +2,7 @@
 
 module Lexer  where
 
+import           Data.Complex
 import           Data.Functor.Identity
 import           Text.ParserCombinators.Parsec
 import           Text.ParserCombinators.Parsec.Language
@@ -21,7 +22,7 @@ octaveDef = emptyDef {
 
   Token.reservedOpNames = [   "+", "-", "*", "/", "=",
                               "~=", "==", "^", "./", ".*",
-                              "<", ">", "<=", ">=", ":", "'",
+                              "<", ">", "<=", ">=", ":", "'", "i",
                               "&", "&&", "|", "||" ]
 }
 
@@ -49,6 +50,20 @@ _int = _lexeme (Token.integer lexer)
 
 _double :: Parser Double
 _double = _lexeme (Token.float lexer)
+
+_imaginary_d :: Parser (Complex Double)
+_imaginary_d = do {
+  dd <- _double;
+  _ <- _reserved "i";
+  return (0 :+ dd)
+}
+
+_imaginary_i :: Parser (Complex Double)
+_imaginary_i = do {
+  dd <- _int;
+  _ <- _reserved "i";
+  return (0 :+ (fromInteger dd))
+}
 
 _stringLiteral :: Parser String
 _stringLiteral = _lexeme s

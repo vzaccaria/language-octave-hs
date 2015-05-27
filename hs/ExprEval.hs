@@ -5,23 +5,30 @@ module ExprEval where
 import           AST
 import           BuiltIns
 import           Control.Monad.Reader
+import           Data.Complex
 import qualified Data.List            as List
 import qualified Data.Map.Strict      as M (empty, lookup)
 import           Data.Matrix          as X
 import           Errors
 import           Eval
-import           Expr                 ()
+import           Expr
 
 
 eeval:: Expr -> Eval MValue
 
 eeval (ConstI i)        = return $ (fromList 1 1 [ I i ])
 eeval (ConstD f)        = return $ (fromList 1 1 [ D f ])
+eeval (ConstC c)        = return $ (fromList 1 1 [ O c])
 eeval (Str st)          = return $ (matrix 1 (length st) $ \(_,j) -> (C (st !! (j - 1))))
 
-eeval (BinOp "+" e1 e2) = liftBinOp (+) (eeval e1) (eeval e2)
-eeval (BinOp "-" e1 e2) = liftBinOp (-) (eeval e1) (eeval e2)
-eeval (BinOp "*" e1 e2) = liftBinOp (*) (eeval e1) (eeval e2)
+eeval (CTran e1)         = liftUnOp  (transpose . conj) (eeval e1)
+eeval (Tran e1)          = liftUnOp  (transpose) (eeval e1)
+eeval (BinOp "+" e1 e2)  = liftBinOp (+) (eeval e1) (eeval e2)
+eeval (BinOp "-" e1 e2)  = liftBinOp (-) (eeval e1) (eeval e2)
+eeval (BinOp "*" e1 e2)  = liftBinOp (*) (eeval e1) (eeval e2)
+eeval (Unop  "-" e1)     = liftUnOp (scaleMatrix (In (-1))) (eeval e1)
+eeval (Unop  "+" e1)     = (eeval e1)
+
 
 eeval (Row es) = List.foldl1 (liftBinOp (X.<|>)) dt
       where dt = (fmap (eeval) es)

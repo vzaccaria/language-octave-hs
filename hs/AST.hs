@@ -2,13 +2,16 @@
 
 module AST where
 
+import           Data.Complex
+
 data Expr =
     ConstI Integer
   | ConstD Double
+  | ConstC (Complex Double)
   | Range Expr Expr
   | Str String
+  | CTran Expr
   | Tran Expr
-  | NTran Expr
   | Matrix [ Expr ]
   | Row [ Expr ]
   | BinOp String Expr Expr

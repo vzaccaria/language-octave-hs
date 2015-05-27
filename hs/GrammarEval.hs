@@ -10,6 +10,7 @@ import           Control.Applicative.Lift
 import           Control.Monad.Trans.State.Lazy
 import           Data.Map.Strict                (empty, insert, lookup)
 import           Data.Matrix
+import           Debug.Trace
 import           Eval
 import           ExprEval
 import           GHC.List
@@ -24,13 +25,17 @@ addAnswer valueV symTableV = insert "ans" valueV symTableV
 
 statementEval :: Statement -> Env -> Either String Env
 statementEval (Assign varNameV Nothing expressionV) symTableV =
-    case (exprVal symTableV expressionV) of
-      Left errorV -> (Left errorV)
-      Right valueV -> (Right (insert varNameV valueV (addAnswer valueV symTableV)))
+    let value = exprVal symTableV expressionV in
+      -- traceShow value $
+        case (value) of
+          Left errorV -> (Left errorV)
+          Right valueV -> (Right (insert varNameV valueV (addAnswer valueV symTableV)))
 
 statementEval (JustExp expressionV) symTableV = do {
     ans <- exprVal symTableV expressionV;
-    Right (addAnswer ans symTableV)
+    let value = ans in
+      -- traceShow value $
+          Right (addAnswer ans symTableV)
   }
 
 statementEvalTrampoline :: Statement -> ProgramStateProcessor
