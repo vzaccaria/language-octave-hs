@@ -13,15 +13,13 @@ import           Data.List              as L
 import           Data.Map               hiding (fromList, (!))
 import           Data.Matrix
 import           Data.Traversable
-import qualified Data.Vector            as V
 import           Errors
 import           GHC.Base
 import           Prelude                hiding (sequence)
 import           PrettyPrint
+import           ScalarNum
+import           ScalarNumMat
 import qualified Text.PrettyPrint.Boxes as B
-
-data ScalarNum    = In Integer | Do Double | Ch Char | Co (Complex Double)
-type NumMat       = Matrix ScalarNum
 
 data Value        = I Integer | D Double | O (Complex Double) | C Char | L Lambda | DF deriving Show
 type MValue       = Matrix Value
@@ -52,7 +50,6 @@ liftUnOp op v1 = do {
 } `catchError` (\_ -> (fail _eLowLevelOperation))
 
 
-
 -- Num instance for ScalarNum
 liftBinOp :: (NumMat -> NumMat -> NumMat) -> Eval MValue -> Eval MValue -> Eval MValue
 liftBinOp op v1 v2 = do {
@@ -70,62 +67,6 @@ liftEwiseOp op v1 = do {
   (fromNumMat (fmap op a1))
 } `catchError` (\_ -> (fail _eLowLevelOperation))
 
-numMatConjugate :: ScalarNum -> ScalarNum
-numMatConjugate (Co c) = Co (conjugate c)
-numMatConjugate x = x
-
-conj :: NumMat -> NumMat
-conj m = fmap numMatConjugate m
-
-instance Num ScalarNum where
-
-  (+) (In d1) (In d2) = (In (d1 + d2))
-  (+) x1 x2 = (Co (toOctaveNum(x1) + toOctaveNum(x2)))
-
-  (*) (In d1) (In d2) = (In (d1 * d2))
-  (*) x1 x2 = (Co (toOctaveNum(x1) * toOctaveNum(x2)))
-
-  abs (In i1) = In (abs i1)
-  abs (Do d1) = Do (abs (d1))
-  abs (Co c1) = Co (abs (c1))
-  abs (Ch c1) = Ch c1
-
-  signum x = Co (signum (toOctaveNum x))
-
-  fromInteger x = (In x)
-
-  negate (Do x) = (Do (-1 * x))
-  negate (In x) = (In (-1 * x))
-  negate x = (Co (-1.0 * (toOctaveNum x)))
-
-instance Show ScalarNum where
-  show (In v) = show v
-  show (Do v) = show v
-  show (Ch v) = show v
-  show (Co v) = show (realPart v) ++ " + " ++ show (imagPart v) ++ "i"
-
-
-toOctaveNum :: ScalarNum -> (Complex Double)
-toOctaveNum (In a) = fromInteger(a)
-toOctaveNum (Do b) = (b :+ 0)
-toOctaveNum (Ch c) = fromIntegral(fromEnum(c))
-toOctaveNum (Co c) = c
-
-
-buildBoxRow :: V.Vector ScalarNum -> B.Box
-buildBoxRow r = B.hcat B.right values where
-  values = V.toList (fmap convertToBox r)
-  convertToBox v = B.moveRight 4 (B.text (show v))
-
-buildBoxMatrix :: Matrix ScalarNum -> B.Box
-buildBoxMatrix m = B.vcat B.top brows where
-  brows = fmap buildBoxRow prows
-  prows = fmap (\x -> (getRow x m)) [ 1 .. k ]
-  k = (nrows m)
-
-
-printRow :: V.Vector ScalarNum -> String
-printRow x = L.foldl1 (GHC.Base.++) (fmap (\e -> show (x V.! e)) [ 0.. ((V.length x) - 1)])
 
 printMValue :: MValue -> String
 printMValue m =

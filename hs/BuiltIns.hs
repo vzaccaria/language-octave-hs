@@ -1,10 +1,12 @@
 
 module BuiltIns where
 
-import           Data.Map    hiding (foldl)
-import           Data.Matrix as M
+import           Data.Map     hiding (foldl)
+import           Data.Matrix  as M
 import           Errors
 import           Eval
+import           ScalarNum
+import           ScalarNumMat
 
 evalFunction :: Lambda -> [MValue] -> Eval MValue
 evalFunction (BuiltInOp1 f) [ ]        = f (single DF)

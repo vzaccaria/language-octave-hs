@@ -12,6 +12,8 @@ import           Data.Matrix          as X
 import           Errors
 import           Eval
 import           Expr
+import           ScalarNum
+import           ScalarNumMat
 
 
 eeval:: Expr -> Eval MValue
