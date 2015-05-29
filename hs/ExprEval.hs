@@ -18,11 +18,10 @@ import           ScalarNumMat
 
 eeval:: Expr -> Eval MValue
 
-eeval (ConstI i)        = return $ (fromList 1 1 [ I i ])
-eeval (ConstD f)        = return $ (fromList 1 1 [ D f ])
-eeval (ConstC c)        = return $ (fromList 1 1 [ O c])
-eeval (Str st)          = return $ (matrix 1 (length st) $ \(_,j) -> (C (st !! (j - 1))))
-
+eeval (ConstI i)         = return $ (M (fromList 1 1 [ I i ]))
+eeval (ConstD f)         = return $ (M (fromList 1 1 [ D f ]))
+eeval (ConstC c)         = return $ (M (fromList 1 1 [ O c]))
+eeval (Str st)           = return $ (M (matrix 1 (length st) $ \(_,j) -> (C (st !! (j - 1)))))
 eeval (CTran e1)         = liftUnOp  (transpose . conj) (eeval e1)
 eeval (Tran e1)          = liftUnOp  (transpose) (eeval e1)
 eeval (BinOp "+" e1 e2)  = liftBinOp (+) (eeval e1) (eeval e2)
@@ -44,7 +43,7 @@ eeval (Range a b) = do {
     (I i1) <- getEl (a1) (1,1);
     (I i2) <- getEl (b1) (1,1);
     let s1 = fromInteger (i2 - i1) in
-      return $ (matrix 1 (s1+1) $ \(_,j) -> (I ((toInteger j) + i1 - 1)))
+      return $ (M (matrix 1 (s1+1) $ \(_,j) -> (I ((toInteger j) + i1 - 1))))
 }
 
 
@@ -60,12 +59,11 @@ eeval (EEval var []) = do {
 eeval (EEval symbol es) = do {
   env   <- ask;
   case (M.lookup symbol env) of
-    (Just mval) -> do {
-      (L f)   <- getEl mval (1,1);
-      dt      <- sequence (map (eeval) es);
-      evalFunction f dt
+    (Just (L f)) -> do {
+            dt <- sequence (map (eeval) es);
+            evalFunction f dt
     }
-    _ -> fail _eNotYetImplemented
+    _ -> fail (_symbolNotFound symbol)
 }
 
 

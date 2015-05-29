@@ -1,10 +1,12 @@
-{-# LANGUAGE GADTs               #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs                #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Eval where
 
 import           AST
+import           Control.Applicative    hiding (empty)
 import           Control.Monad.Error    hiding (sequence)
 import           Control.Monad.Identity hiding (sequence)
 import           Control.Monad.Reader   hiding (sequence)
@@ -21,8 +23,8 @@ import           ScalarNum
 import           ScalarNumMat
 import qualified Text.PrettyPrint.Boxes as B
 
-data Value        = I Integer | D Double | O (Complex Double) | C Char | L Lambda | DF deriving Show
-type MValue       = Matrix Value
+data Value        = I Integer | D Double | O (Complex Double) | C Char  deriving Show
+data MValue       = M (Matrix Value) | L Lambda | DF deriving Show
 
 type Env = Map String MValue
 
@@ -40,6 +42,7 @@ type Eval a = ReaderT Env (ErrorT String Identity) a
 
 runEval3 :: Env -> Eval a -> Either String a
 runEval3 env ev = runIdentity (runErrorT (runReaderT ev env))
+
 
 -- Num instance for ScalarNum
 liftUnOp :: (NumMat -> NumMat) -> Eval MValue -> Eval MValue
@@ -84,38 +87,36 @@ toNum x = case x of
   (D d1) -> return (Do d1)
   (C c1) -> return (Ch c1)
   (Eval.O c1) -> return (Co c1)
-  _ -> fail _eInvalidArguments
 
-fromNum :: ScalarNum -> Eval Value
+fromNum :: ScalarNum -> Value
 fromNum x = case x of
-  (In i1) -> return (I i1)
-  (Do d1) -> return (D d1)
-  (Ch c1) -> return (C c1)
-  (Co c) -> return (Eval.O c)
+  (In i1) -> (I i1)
+  (Do d1) -> (D d1)
+  (Ch c1) -> (C c1)
+  (Co c) -> (Eval.O c)
 
 
 toNumMat :: MValue -> Eval NumMat
-toNumMat v1 = sequence r
+toNumMat (M v1) = sequence r
     where n = nrows v1
           m = ncols v1
           r = matrix n m (\(i,j) -> (toNum (v1 ! (i,j))))
+toNumMat _ = fail _eInvalidArguments
 
 
 fromNumMat :: NumMat -> Eval MValue
-fromNumMat v1 = sequence r
+fromNumMat v1 = return r
     where n = nrows v1
           m = ncols v1
-          r = matrix n m (\(i,j) -> (fromNum (v1 ! (i,j))))
+          r = M (matrix n m (\(i,j) -> (fromNum (v1 ! (i,j)))))
 
-
-single :: Value -> MValue
-single x = fromList 1 1 [ x ]
 
 getEl :: MValue -> (Int, Int) -> Eval Value
-getEl m (i1, i2) = do {
+getEl (M m) (i1, i2) = do {
   case (i1 > (nrows m), i2 > (ncols m)) of
     (False, False) -> return $ m ! (i1, i2)
     _ -> fail "Index out of bound"
 }
+getEl _ _ = fail "_eInvalidArguments"
 
 --
