@@ -4,12 +4,12 @@ module ExprEval where
 
 import           AST
 import           BuiltIns
-import           Control.Monad.State.Lazy
-import           Control.Monad.Error     hiding (sequence)
+import           Control.Monad.Error      hiding (sequence)
 import           Control.Monad.Reader
-import qualified Data.List               as List
-import qualified Data.Map.Strict         as M (insert, lookup)
-import           Data.Matrix             as X
+import           Control.Monad.State.Lazy
+import qualified Data.List                as List
+import qualified Data.Map.Strict          as M (insert, lookup)
+import           Data.Matrix              as X
 import           Errors
 import           Eval
 import           ScalarNum

@@ -15,32 +15,29 @@ import           Eval
 import           ExprEval
 import           GHC.List
 import           Grammar
+import           Statement
 
 type ProgramState = Either String Env
 type ProgramStateProcessor = State ProgramState ()
 type PureStateTransition = (ProgramState -> ProgramState)
 
 addAnswer ::  MValue -> Eval ()
-addAnswer valueV       = get >>= \e -> put $ insert "ans" valueV e
+addAnswer valueV = get >>= \e -> put $ insert "ans" valueV e
 
-addVar :: String -> MValue -> Eval ()
-addVar varnameV valueV = get >>= \e -> put $ insert varnameV valueV e
 
-statementEval :: Statement -> Eval ()
-statementEval (Assign varNameV Nothing expressionV) =  do {
-    valueV <- (eeval expressionV);
-    addAnswer valueV;
-    addVar varNameV valueV;
+
+_evalToAnswer :: Statement -> Eval ()
+_evalToAnswer s = do {
+  mv <- statementEval s;
+  addAnswer mv
 }
-
-statementEval (JustExp expressionV) = (eeval expressionV) >>= addAnswer
 
 statementEvalTrampoline :: Statement -> ProgramStateProcessor
 statementEvalTrampoline statementV = do {
     stateV  <- get;
     case stateV of
       (Right envV) ->
-        let sEval = runEval3 envV (statementEval statementV) in
+        let sEval = runEval3 envV (_evalToAnswer statementV) in
           case sEval of
             Left errorV -> put (Left errorV)
             Right ((), newSymTableV) -> put (Right newSymTableV)
