@@ -31,9 +31,6 @@ evalFunction _ _                       = fail _eNotYetImplemented
 ones :: Int -> Int -> NumMat
 ones n1 m1 = M.matrix n1 m1 $ \(_,_) -> (In 1)
 
-s2m :: ScalarNum -> MValue
-s2m v = M (matrix 1 1 (\(_,_) -> v))
-
 
 funvect :: [(String, MValue)]
 funvect = [
@@ -42,23 +39,13 @@ funvect = [
   ("eye",    (L (BuiltInOp1 (mkOp1s M.identity))))
   ]
 
-getFirstInt :: MValue -> Eval Integer
-getFirstInt m = do {
-  i1 <- getEl m (1,1);
-  case i1 of
-    (In i2) -> return i2
-}
-
 mkOp1s :: (Int -> NumMat) -> MValue -> Eval MValue
-mkOp1s f (M m) = do {
-  i1 <- getFirstInt (M m);
-  return $ M (f (fromInteger i1))
-}
+mkOp1s f x = m2i x >>= \(In i1) -> (return $ M (f (fromInteger i1)))
 
 mkOp2s :: (Int -> Int -> NumMat) -> MValue -> MValue -> Eval MValue
-mkOp2s f (M m1) (M m2) = do {
-  i1 <- getFirstInt (M m1);
-  i2 <- getFirstInt (M m2);
+mkOp2s f x1 x2 = do {
+  (In i1) <- m2i x1;
+  (In i2) <- m2i x2;
   return $ M (f (fromInteger i1) (fromInteger i2))
 }
 

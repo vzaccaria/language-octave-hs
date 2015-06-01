@@ -20,34 +20,31 @@ type ProgramState = Either String Env
 type ProgramStateProcessor = State ProgramState ()
 type PureStateTransition = (ProgramState -> ProgramState)
 
-addAnswer :: MValue -> Env -> Env
-addAnswer valueV symTableV = insert "ans" valueV symTableV
+addAnswer ::  MValue -> Eval ()
+addAnswer valueV       = get >>= \e -> put $ insert "ans" valueV e
 
-statementEval :: Statement -> Env -> Either String Env
-statementEval (Assign varNameV Nothing expressionV) symTableV =
-    let value = exprVal symTableV expressionV in
-      -- traceShow value $
-        case (value) of
-          Left errorV -> (Left errorV)
-          Right valueV -> (Right (insert varNameV valueV (addAnswer valueV symTableV)))
+addVar :: String -> MValue -> Eval ()
+addVar varnameV valueV = get >>= \e -> put $ insert varnameV valueV e
 
-statementEval (JustExp expressionV) symTableV = do {
-    ans <- exprVal symTableV expressionV;
-    let value = ans in
-      -- traceShow value $
-          Right (addAnswer ans symTableV)
-  }
+statementEval :: Statement -> Eval ()
+statementEval (Assign varNameV Nothing expressionV) =  do {
+    valueV <- (eeval expressionV);
+    addAnswer valueV;
+    addVar varNameV valueV;
+}
+
+statementEval (JustExp expressionV) = (eeval expressionV) >>= addAnswer
 
 statementEvalTrampoline :: Statement -> ProgramStateProcessor
 statementEvalTrampoline statementV = do {
-    stateV <- get;
+    stateV  <- get;
     case stateV of
-      Left errorV -> put (Left errorV)
-      Right symTableV -> do {
-        case (statementEval statementV symTableV) of
-          Left errorV -> put (Left errorV)
-          Right newSymTableV -> put (Right newSymTableV)
-      }
+      (Right envV) ->
+        let sEval = runEval3 envV (statementEval statementV) in
+          case sEval of
+            Left errorV -> put (Left errorV)
+            Right ((), newSymTableV) -> put (Right newSymTableV)
+      _ -> return ()
 }
 
 evalSList :: [Statement] -> Env -> ProgramState
