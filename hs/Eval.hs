@@ -87,3 +87,13 @@ getEl (M m) (i1, i2) = do {
     _ -> fail "Index out of bound"
 }
 getEl _ _ = fail _eInvalidArguments
+
+
+asVector :: NumMat -> Eval MValue
+asVector m = return $ (M (colVector (getMatrixAsVector m)))
+
+evalMatrixAccess :: MValue -> [MValue] -> Eval MValue
+evalMatrixAccess m        []            = return m
+evalMatrixAccess (M m)    (DF:[]   )    = asVector m
+evalMatrixAccess n@(M _)  (DF:DF:[])    = return n
+evalMatrixAccess _        _             = fail _eInvalidArguments

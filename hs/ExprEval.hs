@@ -43,7 +43,7 @@ eeval (Range a b) = do {
     (In i2) <- eeval b >>= m2i;
     let s1 = fromInteger (i2 - i1) in
       return $ M (matrix 1 (s1+1) $ \(_,j) -> (In (toInteger j + i1 - 1)))
-} `catchError` (\_ -> fail _eLowLevelOperation)
+} `catchError` (fail . _eGenericError)
 
 
 
@@ -53,17 +53,12 @@ eeval (EEval var args) = do {
     (Just x) -> evalThisSym x args where
 
       evalThisSym (L f) es = mapM eeval es >>= evalFunction f
-      evalThisSym q     [] = return q
+      evalThisSym q     es = mapM eeval es >>= evalMatrixAccess q
       evalThisSym _     _  = fail _eInvalidArguments
 
     (Nothing) -> fail $ _symbolNotFound var
 
-} `catchError` (\_ -> fail _eLowLevelOperation)
-
--- assignVal :: String -> [Expr] -> Expr -> Env -> Env
--- assignVal name [] expr env = case (exprVal env expr) of
---     Right value -> M.insert name value env
---     Left err ->
+} `catchError` (fail . _eGenericError)
 
 
 exprVal :: Env -> Expr -> Either String (MValue, Env)

@@ -22,3 +22,9 @@ _symbolNotFound var = ("symbol `" ++ var ++ "` not found")
 
 _eLowLevelOperation:: String
 _eLowLevelOperation=  ("Low level operation error")
+
+_eSyntaxError::String
+_eSyntaxError = "Syntax error"
+
+_eGenericError :: String -> String
+_eGenericError s = "Error: " ++ s

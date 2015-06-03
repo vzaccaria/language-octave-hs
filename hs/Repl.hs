@@ -6,6 +6,7 @@ import           AST
 import           Browser
 import           BuiltIns
 import qualified Control.Exception        as E
+import           Control.Monad.IO.Class
 import           Data.Map.Strict
 import           Eval
 import           Expr
@@ -26,10 +27,10 @@ evalSListIOBrowser :: String ->  Env -> IO Env
 evalSListIOBrowser programString initialSymTableV = E.catch action handler
   where
       action = do {
-          _ <- printBrowser message;
+          (message, symTableV) <- evalSListS programString initialSymTableV;
+          printBrowser message;
           return symTableV
-          }
-      (message, symTableV) = evalSListS programString initialSymTableV
+      }
       handler :: SomeException -> IO Env
       handler = (\e -> do { _ <- printBrowser (show e); return initialSymTableV })
 
@@ -56,19 +57,19 @@ loop eio (R step symtable) = do
       loop eio (R (step + 1) newSymTableV);
     }
 
-showAnswer ::  Env -> InputT IO ()
-showAnswer symTableV = outputStrLn (showAnswerS symTableV)
+
 
 evalSListIO :: String ->  Env -> InputT IO Env
 evalSListIO programString initialSymTableV = do {
+  (message, symTableV) <- liftIO (evalSListS programString initialSymTableV);
   outputStrLn message;
-  return symTableV;
-  } where
-    (message, symTableV) = evalSListS programString initialSymTableV
+  return symTableV
+}
 
 evalExprIO :: String ->  Env -> InputT IO Env
 evalExprIO ss symtable = do {
-  case (parseExpression ss) of
+  ps <- liftIO (parseExpression ss);
+  case ps of
     Left err -> do {
       outputStrLn ("syntax error, " ++ (show err));
       return symtable

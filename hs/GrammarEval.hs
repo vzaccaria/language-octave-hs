@@ -1,29 +1,28 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-
-
-module GrammarEval where
+module GrammarEval (evalSListS) where
 
 import           AST
 import           Control.Applicative
 import           Control.Applicative.Lift
+import           Control.Monad.Error
 import           Control.Monad.Trans.State.Lazy
 import           Data.Map.Strict                (empty, insert, lookup)
 import           Data.Matrix
 import           Debug.Trace
+import           Errors
 import           Eval
 import           ExprEval
 import           GHC.List
 import           Grammar
 import           Statement
 
-type ProgramState = Either String Env
+type ProgramState          = Either String Env
 type ProgramStateProcessor = State ProgramState ()
 type PureStateTransition = (ProgramState -> ProgramState)
 
 addAnswer ::  MValue -> Eval ()
 addAnswer valueV = get >>= \e -> put $ insert "ans" valueV e
-
 
 
 _evalToAnswer :: Statement -> Eval ()
@@ -59,19 +58,18 @@ showAnswerS symTableV = case (Data.Map.Strict.lookup "ans" symTableV) of
   (Just v) -> "\nans = \n" ++ (printMValue v)
   _ -> "ans = NA"
 
-evalProgramIO :: String -> IO String
-evalProgramIO x = return (evalProgram x)
+unpackProgramState :: ProgramState -> Env -> (String, Env)
+unpackProgramState newState oldSymTable = case newState of
+  (Left s) -> (s, oldSymTable)
+  (Right e) -> (showAnswerS e, e)
 
-evalProgram :: String -> String
-evalProgram programString = outputString where
-  (outputString, _) = evalSListS programString Data.Map.Strict.empty
 
-evalSListS :: String -> Env -> (String, Env)
-
-evalSListS programString initialSymTableV =
-  case (parseStatements (programString ++ ";")) of
-    Left err -> (("syntax error, " ++ (show err)), initialSymTableV);
-    Right statementListV ->
-      case evalSList statementListV initialSymTableV of
-        Left errorV -> (("error, " ++ (errorV)), initialSymTableV)
-        Right newSymTableV -> (showAnswerS newSymTableV, newSymTableV)
+evalSListS :: String -> Env -> IO (String, Env)
+evalSListS programString initialSymTableV = do {
+    maybeStatementList <- parseStatements (programString ++ ";");
+    case maybeStatementList of
+      (Left _)               -> return $ (_eSyntaxError, initialSymTableV)
+      (Right statementListV) -> return $ unpackedState where
+                  unpackedState = unpackProgramState evaluationResult initialSymTableV
+                  evaluationResult = (evalSList statementListV initialSymTableV) ;
+  }
